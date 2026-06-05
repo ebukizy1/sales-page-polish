@@ -64,12 +64,14 @@ export const notifyNewOrder = createServerFn({ method: "POST" })
 export const getLandingPageData = createServerFn({ method: "GET" })
   .handler(async () => {
     try {
-      const { data: products } = await supabase
+      const { data: products, error: pErr } = await supabase
         .from("products")
         .select("*")
         .eq("active", true)
         .order("featured", { ascending: false })
         .limit(1);
+
+      if (pErr) throw pErr;
 
       const product = products?.[0] ?? null;
       if (!product) return { product: null };
