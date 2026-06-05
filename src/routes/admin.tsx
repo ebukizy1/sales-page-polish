@@ -237,7 +237,11 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
     setSaving(true);
     const { error } = await db.from("products").update({
       slug: p.slug, title: p.title, short_description: p.short_description, long_description: p.long_description,
-      hero_image_url: p.hero_image_url, video_url: p.video_url, warranty_text: p.warranty_text,
+      hero_image_url: p.hero_image_url,
+      packaging_image_url: p.packaging_image_url,
+      night_image_url: p.night_image_url,
+      specs_image_url: p.specs_image_url,
+      video_url: p.video_url, warranty_text: p.warranty_text,
       delivery_text: p.delivery_text, active: p.active, featured: p.featured,
     }).eq("id", p.id);
     setSaving(false);
@@ -250,13 +254,26 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
     onClose();
   };
 
-  const uploadHero = async (file: File) => {
-    const path = `${p.id}/hero-${Date.now()}-${file.name}`;
+  const uploadTo = async (
+    slot: "hero_image_url" | "packaging_image_url" | "night_image_url" | "specs_image_url",
+    file: File,
+  ) => {
+    const path = `${p.id}/${slot}-${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("products").upload(path, file, { upsert: true });
     if (error) { alert(error.message); return; }
     const { data } = supabase.storage.from("products").getPublicUrl(path);
-    set("hero_image_url", data.publicUrl);
+    set(slot, data.publicUrl);
   };
+
+  const imageSlots: {
+    key: "hero_image_url" | "specs_image_url" | "packaging_image_url" | "night_image_url";
+    label: string; hint: string;
+  }[] = [
+    { key: "hero_image_url",      label: "1. Hero / Product Image",      hint: "Main product shot — shown first in the hero gallery." },
+    { key: "specs_image_url",     label: "2. Specifications Image",      hint: "Spec/diagram shot — shown beside the spec table." },
+    { key: "packaging_image_url", label: "3. Packaging Image",           hint: "Box / unboxing shot — shown in the 'Zero Bills' section." },
+    { key: "night_image_url",     label: "4. Installed-At-Night Image",  hint: "Night / installed shot — shown in the dark 'Real Light' section." },
+  ];
 
   return (
     <div className="space-y-8">
@@ -284,10 +301,36 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
         </div>
       </Section>
 
-      <Section title="Hero Image">
-        {p.hero_image_url && <img src={p.hero_image_url} alt="" className="mb-3 h-40 rounded-lg object-cover" />}
-        <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadHero(e.target.files[0])} />
-        <Field label="Or paste URL"><input className={inputCls} value={p.hero_image_url ?? ""} onChange={(e) => set("hero_image_url", e.target.value)} /></Field>
+      <Section title="Sales Page Section Images">
+        <p className="text-xs text-muted-foreground">
+          One image per section, in the order they appear on the sales page. After uploading, click <strong>Save Product</strong> at the top.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {imageSlots.map(({ key, label, hint }) => {
+            const url = p[key] as string | null;
+            return (
+              <div key={key} className="rounded-xl border border-border bg-background p-3">
+                <p className="text-sm font-bold">{label}</p>
+                <p className="mb-2 text-xs text-muted-foreground">{hint}</p>
+                {url ? (
+                  <img src={url} alt={label} className="mb-2 aspect-video w-full rounded-lg object-cover" />
+                ) : (
+                  <div className="mb-2 flex aspect-video w-full items-center justify-center rounded-lg bg-secondary text-xs text-muted-foreground">No image</div>
+                )}
+                <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadTo(key, e.target.files[0])} className="block w-full text-xs" />
+                <input
+                  className={`${inputCls} mt-2`}
+                  placeholder="…or paste image URL"
+                  value={url ?? ""}
+                  onChange={(e) => set(key, e.target.value)}
+                />
+                {url && (
+                  <button type="button" onClick={() => set(key, null)} className="mt-2 text-xs text-destructive underline">Remove</button>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </Section>
 
       <SpecsSection productId={p.id} items={specs} reload={loadAll} />
