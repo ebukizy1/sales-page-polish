@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Product, Spec, Feature, Package, SiteSettings, Review, FAQ, GalleryImage, Offer } from "@/lib/cms-types";
 
 import { getServerConfig } from "../config.server";
 
@@ -57,4 +59,104 @@ export const notifyNewOrder = createServerFn({ method: "POST" })
     });
 
     return { sent: true };
+  });
+
+export const getLandingPageData = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data: products } = await supabaseAdmin
+      .from("products")
+      .select("*")
+      .eq("active", true)
+      .order("featured", { ascending: false })
+      .limit(1);
+
+    const product = products?.[0] ?? null;
+    if (!product) return null;
+
+    const productId = product.id;
+
+    const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([
+      supabaseAdmin.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"),
+      supabaseAdmin.from("product_features").select("*").eq("product_id", productId).order("sort_order"),
+      supabaseAdmin.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"),
+      supabaseAdmin.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+      supabaseAdmin.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"),
+      supabaseAdmin.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"),
+      supabaseAdmin.from("product_images").select("*").eq("product_id", productId).order("sort_order"),
+    ]);
+
+    return {
+      product: product as Product,
+      specs: specsRes.data ?? [],
+      features: featRes.data ?? [],
+      packages: pkgRes.data ?? [],
+      settings: setRes.data ?? null,
+      reviews: revRes.data ?? [],
+      faqs: faqRes.data ?? [],
+      images: imgRes.data ?? [],
+    };
+  });
+
+export const getProductBySlugData = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ slug: z.string() }))
+  .handler(async ({ data }) => {
+    const { slug } = data;
+    const { data: product } = await supabaseAdmin
+      .from("products")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (!product) return null;
+
+    const productId = product.id;
+
+    const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([
+      supabaseAdmin.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"),
+      supabaseAdmin.from("product_features").select("*").eq("product_id", productId).order("sort_order"),
+      supabaseAdmin.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"),
+      supabaseAdmin.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+      supabaseAdmin.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"),
+      supabaseAdmin.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"),
+      supabaseAdmin.from("product_images").select("*").eq("product_id", productId).order("sort_order"),
+    ]);
+
+    return {
+      product: product as Product,
+      specs: specsRes.data ?? [],
+      features: featRes.data ?? [],
+      packages: pkgRes.data ?? [],
+      settings: setRes.data ?? null,
+      reviews: revRes.data ?? [],
+      faqs: faqRes.data ?? [],
+      images: imgRes.data ?? [],
+    };
+  });
+
+export const getOffersData = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data: offers } = await supabaseAdmin
+      .from("offers")
+      .select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order")
+      .eq("active", true)
+      .order("sort_order", { ascending: true });
+
+    const nextOffers = (offers ?? []) as Offer[];
+
+    const slugs = Array.from(
+      new Set(nextOffers.map((o) => o.product_slug).filter((x): x is string => !!x)),
+    );
+
+    let productImages: Record<string, string> = {};
+    if (slugs.length) {
+      const { data: products } = await supabaseAdmin.from("products").select("slug,hero_image_url").in("slug", slugs);
+      (products as Array<{ slug: string; hero_image_url: string | null }> | null)?.forEach((p) => {
+        if (p.hero_image_url) productImages[p.slug] = p.hero_image_url;
+      });
+    }
+
+    return {
+      offers: nextOffers,
+      productImages,
+    };
   });

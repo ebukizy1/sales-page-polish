@@ -1,11 +1,11 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
-import { d as db } from "./cms-types-B7Rjfl77.mjs";
+import { g as getOffersData } from "./example.functions-TOUht9u8.mjs";
+import "../_libs/seroval.mjs";
 import { G as Gift, T as Tag, A as ArrowRight } from "../_libs/lucide-react.mjs";
 import "../_libs/tanstack__router-core.mjs";
 import "../_libs/tanstack__history.mjs";
 import "../_libs/cookie-es.mjs";
-import "../_libs/seroval.mjs";
 import "../_libs/seroval-plugins.mjs";
 import "node:stream/web";
 import "node:stream";
@@ -15,42 +15,27 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "../_libs/supabase__supabase-js.mjs";
-import "../_libs/supabase__postgrest-js.mjs";
-import "../_libs/supabase__realtime-js.mjs";
-import "../_libs/supabase__phoenix.mjs";
-import "../_libs/supabase__storage-js.mjs";
-import "../_libs/iceberg-js.mjs";
-import "../_libs/supabase__auth-js.mjs";
-import "tslib";
-import "../_libs/supabase__functions-js.mjs";
+import "./server-CbO9gT64.mjs";
+import "node:async_hooks";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+import "../_libs/zod.mjs";
 function OffersPage() {
   const [offers, setOffers] = reactExports.useState([]);
   const [productImages, setProductImages] = reactExports.useState({});
   const [loading, setLoading] = reactExports.useState(true);
   reactExports.useEffect(() => {
     (async () => {
-      const {
-        data
-      } = await db.from("offers").select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order").eq("active", true).order("sort_order", {
-        ascending: true
-      });
-      const nextOffers = data ?? [];
-      setOffers(nextOffers);
-      const slugs = Array.from(new Set(nextOffers.map((o) => o.product_slug).filter((x) => !!x)));
-      if (slugs.length) {
-        const {
-          data: products
-        } = await db.from("products").select("slug,hero_image_url").in("slug", slugs);
-        const map = {};
-        products?.forEach((p) => {
-          if (p.hero_image_url) map[p.slug] = p.hero_image_url;
-        });
-        setProductImages(map);
-      } else {
-        setProductImages({});
+      try {
+        const res = await getOffersData();
+        setOffers(res.offers);
+        setProductImages(res.productImages);
+      } catch (err) {
+        console.error("Failed to load offers:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, []);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "min-h-screen bg-background text-foreground", children: [

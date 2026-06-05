@@ -1,32 +1,8 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
 import { d as db } from "./cms-types-B7Rjfl77.mjs";
-import { b as createServerFn, T as TSS_SERVER_FUNCTION, g as getServerFnById } from "./server-BxLb0f3W.mjs";
+import { n as notifyNewOrder } from "./example.functions-TOUht9u8.mjs";
 import { Z as Zap, C as Check, F as Flame, M as MessageCircle, S as ShieldCheck, a as Truck, L as Lock, b as Star, c as CircleCheck, d as Leaf, W as Wrench, D as Droplet, B as BatteryFull, e as Award, f as Sun, g as MapPin, P as Package, h as TriangleAlert, i as Phone, j as ChevronLeft, k as ChevronRight, l as Clock, m as ChevronUp, n as ChevronDown } from "../_libs/lucide-react.mjs";
-import { o as objectType, s as stringType } from "../_libs/zod.mjs";
-var createSsrRpc = (functionId) => {
-  const url = "/_serverFn/" + functionId;
-  const serverFnMeta = { id: functionId };
-  const fn = async (...args) => {
-    return (await getServerFnById(functionId))(...args);
-  };
-  return Object.assign(fn, {
-    url,
-    serverFnMeta,
-    [TSS_SERVER_FUNCTION]: true
-  });
-};
-createServerFn({
-  method: "POST"
-}).inputValidator(objectType({
-  name: stringType().min(1)
-})).handler(createSsrRpc("a8ea96f55c98d9dfe39eba1f21271c6c33bfa924611fe9d828fca0774e41b939"));
-const notifyNewOrder = createServerFn({
-  method: "POST"
-}).inputValidator(objectType({
-  to: stringType().email().optional(),
-  subject: stringType().min(1),
-  text: stringType().min(1)
-})).handler(createSsrRpc("09ae2a65f32d5db9bfcd9527f81e90c587a3ff1b110b2c658a951f49704f8c64"));
 const STATES = [
   "Abia",
   "Adamawa",
@@ -172,7 +148,7 @@ function ProductSalesFunnel({
   const whatsapp = settings?.whatsapp ?? "";
   const email = settings?.email ?? "";
   const tagline = product.tagline || "Pay On Delivery Nationwide";
-  const heroHeadline = product.hero_headline || "Light Your Whole Compound — Without NEPA.";
+  product.hero_headline || "Light Your Whole Compound — Without NEPA.";
   const heroSubheadline = product.hero_subheadline || "Die-cast aluminium · 25,000mAh · 5-Year Warranty · Pay On Delivery";
   const stockStatus = product.stock_status || "Only 14 units left at promo price";
   const heroCtaText = product.hero_cta_text || "✅ Order Now — Pay On Delivery";
@@ -256,9 +232,8 @@ function ProductSalesFunnel({
             /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { className: "h-3.5 w-3.5 fill-emerald-400" }),
             " DIRECT SALE DIRECT FUNNEL"
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] font-black uppercase tracking-[0.25em] text-slate-400", children: product.title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-4xl font-black uppercase tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent leading-tight sm:text-5xl lg:text-6xl drop-shadow-[0_2px_10px_rgba(16,185,129,0.25)]", children: product.title }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs font-black uppercase tracking-widest text-emerald-400", children: tagline }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-4xl font-extrabold tracking-tight text-white leading-tight sm:text-5xl lg:text-6xl", children: heroHeadline }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-lg text-slate-300 leading-relaxed font-medium", children: heroSubheadline }),
           product.short_description && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-slate-400 leading-relaxed font-medium", children: product.short_description }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "lg:hidden", children: galleryBlock }),
@@ -563,13 +538,16 @@ function ProductSalesFunnel({
         ] })
       ] })
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("footer", { className: "border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-500 font-bold", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-      "© ",
-      (/* @__PURE__ */ new Date()).getFullYear(),
-      " ",
-      settings?.store_name || "Store",
-      " · All Rights Reserved"
-    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("footer", { className: "border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+        "© ",
+        (/* @__PURE__ */ new Date()).getFullYear(),
+        " ",
+        settings?.store_name || "Store",
+        " · All Rights Reserved"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/offers", className: "text-emerald-400 hover:text-emerald-300 underline tracking-wider font-extrabold uppercase text-xs transition-colors", children: "View Offers" })
+    ] }),
     (phone || whatsapp) && /* @__PURE__ */ jsxRuntimeExports.jsx(StickyCTA, { phone, whatsapp, ctaText: "✅ Place Order Now — Pay On Delivery" })
   ] });
 }
@@ -701,6 +679,23 @@ function OrderForm({ packages, whatsapp, email, phone }) {
       }
       setSuccess(true);
       setForm({ name: "", phone: "", altPhone: "", address: "", state: "", pkg: "" });
+      const whatsappMsg = [
+        "Hello, I just placed an order on your store:",
+        "",
+        `*Name:* ${form.name.trim()}`,
+        `*Phone:* ${form.phone.trim()}`,
+        `*Alt Phone:* ${form.altPhone.trim() || "N/A"}`,
+        `*Address:* ${form.address.trim()}`,
+        `*State:* ${form.state}`,
+        `*Package:* ${selectedPkg.title}${selectedPkg.bonus_text ? ` + ${selectedPkg.bonus_text}` : ""}`,
+        `*Quantity:* ${selectedPkg.quantity}`,
+        `*Total:* ₦${selectedPkg.price.toLocaleString()}`
+      ].join("\n");
+      const cleanWhatsapp = (whatsapp || phone || "2348037477275").replace(/[^0-9]/g, "");
+      const whatsappUrl = `https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(whatsappMsg)}`;
+      if (typeof window !== "undefined") {
+        window.location.href = whatsappUrl;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {

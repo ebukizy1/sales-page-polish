@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { db, type Product, type Spec, type Feature, type Package, type SiteSettings, type Review, type FAQ, type GalleryImage } from "@/lib/cms-types";
+import { getLandingPageData } from "@/lib/api/example.functions";
 import ProductSalesFunnel from "@/components/ProductSalesFunnel";
+import type { Product, Spec, Feature, Package, SiteSettings, Review, FAQ, GalleryImage } from "@/lib/cms-types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,38 +27,22 @@ type CmsData = {
 
 function Index() {
   const [data, setData] = useState<CmsData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      // Get the featured active product
-      const { data: products } = await db.from("products").select("*").eq("active", true).order("featured", { ascending: false }).limit(1);
-      const product: Product | null = products?.[0] ?? null;
-      const productId = product?.id;
-      
-      const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([
-        productId ? db.from("product_specifications").select("*").eq("product_id", productId).order("sort_order") : Promise.resolve({ data: [] }),
-        productId ? db.from("product_features").select("*").eq("product_id", productId).order("sort_order") : Promise.resolve({ data: [] }),
-        productId ? db.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order") : Promise.resolve({ data: [] }),
-        db.from("site_settings").select("*").eq("id", 1).maybeSingle(),
-        productId ? db.from("product_reviews").select("*").eq("product_id", productId).order("sort_order") : Promise.resolve({ data: [] }),
-        productId ? db.from("product_faqs").select("*").eq("product_id", productId).order("sort_order") : Promise.resolve({ data: [] }),
-        productId ? db.from("product_images").select("*").eq("product_id", productId).order("sort_order") : Promise.resolve({ data: [] }),
-      ]);
-
-      setData({
-        product,
-        specs: specsRes.data ?? [],
-        features: featRes.data ?? [],
-        packages: pkgRes.data ?? [],
-        settings: setRes.data ?? null,
-        reviews: revRes.data ?? [],
-        faqs: faqRes.data ?? [],
-        images: imgRes.data ?? [],
-      });
+      try {
+        const res = await getLandingPageData();
+        setData(res);
+      } catch (err) {
+        console.error("Failed to load landing page data:", err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
-  if (!data) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-400 font-bold uppercase tracking-wider">
         Loading…
@@ -65,9 +50,7 @@ function Index() {
     );
   }
 
-  const { product, specs, features, packages, settings, reviews, faqs, images } = data;
-
-  if (!product) {
+  if (!data || !data.product) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-center text-slate-200">
         <div className="space-y-4">
@@ -78,6 +61,8 @@ function Index() {
       </div>
     );
   }
+
+  const { product, specs, features, packages, settings, reviews, faqs, images } = data;
 
   return (
     <ProductSalesFunnel

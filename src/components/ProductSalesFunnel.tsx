@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { db, type Product, type Spec, type Feature, type Package, type SiteSettings, type Review, type FAQ, type GalleryImage } from "@/lib/cms-types";
 import { notifyNewOrder } from "@/lib/api/example.functions";
 import {
@@ -9,10 +10,10 @@ import {
 } from "lucide-react";
 
 const STATES = [
-  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River",
-  "Delta","Ebonyi","Edo","Ekiti","Enugu","FCT - Abuja","Gombe","Imo","Jigawa","Kaduna",
-  "Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun",
-  "Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara",
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River",
+  "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna",
+  "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun",
+  "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ];
 
 const ICONS: Record<string, LucideIcon> = {
@@ -21,7 +22,7 @@ const ICONS: Record<string, LucideIcon> = {
 
 /* ---------- Countdown ---------- */
 function useCountdown() {
-  const getTarget = () => { const t = new Date(); t.setHours(23,59,59,999); return t.getTime(); };
+  const getTarget = () => { const t = new Date(); t.setHours(23, 59, 59, 999); return t.getTime(); };
   const [target, setTarget] = useState(getTarget);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -30,9 +31,9 @@ function useCountdown() {
   }, [target]);
   const diff = Math.max(0, target - now);
   return {
-    h: String(Math.floor(diff/3.6e6)).padStart(2,"0"),
-    m: String(Math.floor((diff%3.6e6)/6e4)).padStart(2,"0"),
-    s: String(Math.floor((diff%6e4)/1000)).padStart(2,"0"),
+    h: String(Math.floor(diff / 3.6e6)).padStart(2, "0"),
+    m: String(Math.floor((diff % 3.6e6) / 6e4)).padStart(2, "0"),
+    s: String(Math.floor((diff % 6e4) / 1000)).padStart(2, "0"),
   };
 }
 
@@ -55,7 +56,7 @@ function CountdownPill({ tone = "dark" }: { tone?: "dark" | "danger" }) {
       <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider sm:text-sm">
         <Clock className="h-4 w-4 text-emerald-400 animate-pulse" /> Offer ends in:
       </span>
-      <div className="flex gap-1"><FlipCell v={h} l="HR"/><FlipCell v={m} l="MIN"/><FlipCell v={s} l="SEC"/></div>
+      <div className="flex gap-1"><FlipCell v={h} l="HR" /><FlipCell v={m} l="MIN" /><FlipCell v={s} l="SEC" /></div>
     </div>
   );
 }
@@ -67,12 +68,12 @@ function StickyCTA({ phone, whatsapp, ctaText }: { phone: string; whatsapp: stri
       <div className="mx-auto flex max-w-md items-center gap-2">
         {whatsapp && (
           <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">
-            <MessageCircle className="h-5 w-5"/>
+            <MessageCircle className="h-5 w-5" />
           </a>
         )}
         {phone && (
           <a href={`tel:${phone}`} className="flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">
-            <Phone className="h-5 w-5"/>
+            <Phone className="h-5 w-5" />
           </a>
         )}
         <a href="#order" className="lit-cta flex h-12 flex-1 items-center justify-center rounded-xl px-4 text-sm font-black tracking-wide text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all duration-150">
@@ -156,7 +157,7 @@ export default function ProductSalesFunnel({
   const heroSubheadline = product.hero_subheadline || "Die-cast aluminium · 25,000mAh · 5-Year Warranty · Pay On Delivery";
   const stockStatus = product.stock_status || "Only 14 units left at promo price";
   const heroCtaText = product.hero_cta_text || "✅ Order Now — Pay On Delivery";
-  
+
   const heroList = useMemo(() => {
     if (product.hero_description) {
       return product.hero_description.split("\n").filter(Boolean);
@@ -181,7 +182,7 @@ export default function ProductSalesFunnel({
     if (product.packaging_image_url) list.push({ url: product.packaging_image_url, label: "PACKAGING", type: "gallery" });
     if (product.night_image_url) list.push({ url: product.night_image_url, label: "INSTALLED AT NIGHT", type: "installation" });
     if (product.specs_image_url) list.push({ url: product.specs_image_url, label: "SPECS SHOT", type: "gallery" });
-    
+
     images.forEach((img) => {
       list.push({ url: img.url, label: img.alt || "Gallery Image", type: img.image_type || "gallery" });
     });
@@ -230,11 +231,10 @@ export default function ProductSalesFunnel({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition ${
-              activeTab === tab.id
+            className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition ${activeTab === tab.id
                 ? "bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-black"
                 : "text-slate-400 hover:text-white"
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -257,23 +257,20 @@ export default function ProductSalesFunnel({
       <section className="relative overflow-hidden pt-6 pb-12 sm:py-16 lg:py-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
         <div className="pointer-events-none absolute -right-32 -top-32 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-40 -left-20 h-[500px] w-[500px] rounded-full bg-teal-500/5 blur-[120px]" />
-        
+
         <div className="relative mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[1.1fr_1fr_0.9fr] lg:items-start lg:gap-7">
-          
+
           {/* LEFT col: Copy */}
           <div className="space-y-5">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 border border-emerald-500/30 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-emerald-400 shadow-md">
               <Zap className="h-3.5 w-3.5 fill-emerald-400" /> DIRECT SALE DIRECT FUNNEL
             </span>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">
+            <h1 className="text-4xl font-black uppercase tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent leading-tight sm:text-5xl lg:text-6xl drop-shadow-[0_2px_10px_rgba(16,185,129,0.25)]">
               {product.title}
-            </p>
+            </h1>
             <p className="text-xs font-black uppercase tracking-widest text-emerald-400">
               {tagline}
             </p>
-            <h1 className="text-4xl font-extrabold tracking-tight text-white leading-tight sm:text-5xl lg:text-6xl">
-              {heroHeadline}
-            </h1>
             <p className="text-lg text-slate-300 leading-relaxed font-medium">
               {heroSubheadline}
             </p>
@@ -312,14 +309,14 @@ export default function ProductSalesFunnel({
                 Limited Stock Promo
               </span>
             </div>
-            
+
             <div className="flex items-center justify-between pt-2">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Discount Price</span>
               <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/25">
-                <Flame className="h-3.5 w-3.5 fill-amber-400"/> Selling Fast
+                <Flame className="h-3.5 w-3.5 fill-amber-400" /> Selling Fast
               </span>
             </div>
-            
+
             <p className="mt-2 text-sm text-slate-500 line-through">₦{regularPrice.toLocaleString()}/unit</p>
             <p className="text-4xl font-black tracking-tight text-emerald-400 leading-none">
               ₦{unitPrice.toLocaleString()}
@@ -350,12 +347,12 @@ export default function ProductSalesFunnel({
             </div>
 
             <div className="mt-5 grid grid-cols-3 gap-1.5 text-center text-[9px] font-black uppercase tracking-wider text-slate-400 border-t border-slate-800 pt-4">
-              <div className="rounded-lg bg-slate-900/30 p-2 border border-slate-900"><ShieldCheck className="mx-auto mb-1 h-4 w-4 text-emerald-400"/>5-YR Wty</div>
-              <div className="rounded-lg bg-slate-900/30 p-2 border border-slate-900"><Truck className="mx-auto mb-1 h-4 w-4 text-emerald-400"/>Free Ship</div>
-              <div className="rounded-lg bg-slate-900/30 p-2 border border-slate-900"><Lock className="mx-auto mb-1 h-4 w-4 text-emerald-400"/>Pay On Del</div>
+              <div className="rounded-lg bg-slate-900/30 p-2 border border-slate-900"><ShieldCheck className="mx-auto mb-1 h-4 w-4 text-emerald-400" />5-YR Wty</div>
+              <div className="rounded-lg bg-slate-900/30 p-2 border border-slate-900"><Truck className="mx-auto mb-1 h-4 w-4 text-emerald-400" />Free Ship</div>
+              <div className="rounded-lg bg-slate-900/30 p-2 border border-slate-900"><Lock className="mx-auto mb-1 h-4 w-4 text-emerald-400" />Pay On Del</div>
             </div>
 
-            <div className="mt-5"><CountdownPill tone="danger"/></div>
+            <div className="mt-5"><CountdownPill tone="danger" /></div>
 
             <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-300 font-bold border-t border-slate-800/60 pt-3">
               <Star className="h-4 w-4 fill-amber-400 text-amber-400" /> 4.9 · 3,400+ Nigerian homes lit up
@@ -384,7 +381,7 @@ export default function ProductSalesFunnel({
       {/* DYNAMIC FEATURES (SECTION 2) */}
       <section className="py-20 bg-slate-950 relative">
         <div className="pointer-events-none absolute left-10 top-1/2 h-[400px] w-[400px] rounded-full bg-emerald-500/5 blur-[120px]" />
-        
+
         <div className="mx-auto max-w-6xl px-4 relative z-10">
           <div className="mx-auto max-w-2xl text-center space-y-3 mb-12">
             <h2 className="text-3xl font-black tracking-tight sm:text-4xl">
@@ -427,7 +424,7 @@ export default function ProductSalesFunnel({
       {/* ZERO BILLS SECTION (SECTION 3) */}
       <section className="bg-slate-900/10 py-20 border-y border-slate-900 relative">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 lg:grid-cols-2">
-          
+
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl opacity-10 blur-xl group-hover:opacity-15 transition" />
             <SlotImage src={product.packaging_image_url} label="IMAGE 2 — PACKAGING" className="aspect-square w-full rounded-3xl border border-slate-800 object-cover relative z-10" />
@@ -474,7 +471,7 @@ export default function ProductSalesFunnel({
       {/* REAL SECURITY MEDIA SECTION (SECTION 4) */}
       <section className="bg-slate-950 py-20 relative">
         <div className="pointer-events-none absolute right-10 top-1/4 h-[500px] w-[500px] rounded-full bg-emerald-500/5 blur-[120px]" />
-        
+
         <div className="mx-auto max-w-6xl px-4 relative z-10">
           <div className="mx-auto max-w-2xl text-center space-y-3 mb-12">
             <h2 className="text-3xl font-black tracking-tight sm:text-4xl text-white">
@@ -521,7 +518,7 @@ export default function ProductSalesFunnel({
 
           <div className="grid gap-10 lg:grid-cols-2 lg:items-start max-w-5xl mx-auto">
             <SlotImage src={product.specs_image_url} label="IMAGE 4 — SPECS SHOT" className="aspect-[5/4] w-full rounded-3xl border border-slate-800 object-cover shadow-2xl" />
-            
+
             <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/40 backdrop-blur shadow-xl">
               <table className="w-full text-left text-sm">
                 <tbody>
@@ -555,7 +552,7 @@ export default function ProductSalesFunnel({
       {/* CUSTOMER TESTIMONIALS (SECTION 6) */}
       <section className="py-20 bg-slate-950 relative">
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-emerald-500/5 blur-[120px]" />
-        
+
         <div className="mx-auto max-w-6xl px-4 relative z-10">
           <div className="mx-auto max-w-2xl text-center space-y-3 mb-12">
             <div className="flex justify-center gap-1">
@@ -576,7 +573,7 @@ export default function ProductSalesFunnel({
                   </div>
                   <p className="text-sm text-slate-300 italic leading-relaxed font-medium">"{r.review_text}"</p>
                 </div>
-                
+
                 <div className="flex items-center gap-3.5 border-t border-slate-900/80 pt-4 mt-6">
                   {r.customer_photo_url ? (
                     <img src={r.customer_photo_url} alt={r.customer_name} className="h-11 w-11 rounded-full object-cover border border-slate-800" />
@@ -609,11 +606,11 @@ export default function ProductSalesFunnel({
         <div className="mx-auto max-w-3xl px-4">
           <div className="rounded-3xl border-2 border-emerald-500/30 bg-slate-900/20 p-8 text-center shadow-2xl backdrop-blur relative overflow-hidden">
             <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
-            
+
             <span className="inline-block rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-emerald-400 shadow-md">
               Today's Promo Price
             </span>
-            
+
             <p className="mt-5 text-sm text-slate-500 line-through">Regular: ₦{regularPrice.toLocaleString()}/unit</p>
             <p className="mt-1 text-5xl font-black text-emerald-400 tracking-tight sm:text-6xl">
               ₦{unitPrice.toLocaleString()}
@@ -622,17 +619,17 @@ export default function ProductSalesFunnel({
             <p className="mt-2 text-xs font-black text-emerald-400 tracking-wider uppercase">
               + FREE delivery anywhere in Nigeria
             </p>
-            
+
             <div className="my-6 border-t border-slate-800" />
-            
+
             <p className="text-sm font-black uppercase tracking-wider flex items-center justify-center gap-1 text-slate-200">
               <PackageIcon className="h-4 w-4 text-emerald-400" /> Bulk Buyers Bonus Included
             </p>
             <p className="mt-2 text-sm text-slate-400 leading-relaxed font-medium">
               Order 5+ units and get a FREE Rechargeable Bulb. Buy 10 pieces and get 2 FREE units.
             </p>
-            
-            <div className="mt-6 flex justify-center"><CountdownPill tone="danger"/></div>
+
+            <div className="mt-6 flex justify-center"><CountdownPill tone="danger" /></div>
           </div>
 
           {/* WARNING PLEASE READ BAR */}
@@ -640,7 +637,7 @@ export default function ProductSalesFunnel({
             <div className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 py-3 text-center text-xs font-black uppercase tracking-wider text-white shadow-md">
               <AlertTriangle className="h-4 w-4 text-white animate-bounce" /> Please Read Before Ordering
             </div>
-            
+
             <div className="grid gap-4 p-5 sm:grid-cols-3 border-b border-rose-950/20">
               {[
                 { i: Flame, t: "HIGH DEMAND", s: "27 people ordered today" },
@@ -651,7 +648,7 @@ export default function ProductSalesFunnel({
                 return (
                   <div key={i} className="flex items-start gap-3 rounded-2xl bg-rose-500/5 p-3.5 border border-rose-500/10">
                     <div className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                      <Ic className="h-4.5 w-4.5"/>
+                      <Ic className="h-4.5 w-4.5" />
                     </div>
                     <div>
                       <p className="text-xs font-black uppercase tracking-wider text-rose-300">{b.t}</p>
@@ -671,16 +668,16 @@ export default function ProductSalesFunnel({
                 "If a family member or third party will pay, please align with them BEFORE submitting.",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-2">
-                  <span className="mt-2 inline-block h-1.5 w-1.5 flex-none rounded-full bg-rose-500"/>
+                  <span className="mt-2 inline-block h-1.5 w-1.5 flex-none rounded-full bg-rose-500" />
                   <span>{t}</span>
                 </li>
               ))}
             </ul>
-            
+
             <div className="mx-6 mb-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3.5 text-center text-sm font-black text-emerald-400">
               ⚡ MINIMUM ORDER: 2 PIECES. Bulk buyers get free gifts and extra units.
             </div>
-            
+
             <p className="px-6 pb-6 text-center text-[10px] font-black text-rose-400 uppercase tracking-widest animate-pulse">
               ⚠ ONLY SUBMIT THE ORDER FORM IF YOU ARE READY TO BUY NOW!
             </p>
@@ -727,12 +724,12 @@ export default function ProductSalesFunnel({
             <div className="flex flex-col items-center gap-3.5 sm:flex-row sm:justify-center">
               {whatsapp && (
                 <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto">
-                  <MessageCircle className="h-5 w-5"/> Chat On WhatsApp
+                  <MessageCircle className="h-5 w-5" /> Chat On WhatsApp
                 </a>
               )}
               {phone && (
                 <a href={`tel:${phone}`} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-8 py-4 font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto">
-                  <Phone className="h-5 w-5"/> Call {phone}
+                  <Phone className="h-5 w-5" /> Call {phone}
                 </a>
               )}
             </div>
@@ -741,8 +738,11 @@ export default function ProductSalesFunnel({
       )}
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-500 font-bold">
+      <footer className="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-3">
         <p>© {new Date().getFullYear()} {settings?.store_name || "Store"} · All Rights Reserved</p>
+        <Link to="/offers" className="text-emerald-400 hover:text-emerald-300 underline tracking-wider font-extrabold uppercase text-xs transition-colors">
+          View Offers
+        </Link>
       </footer>
 
       {(phone || whatsapp) && <StickyCTA phone={phone} whatsapp={whatsapp} ctaText="✅ Place Order Now — Pay On Delivery" />}
@@ -771,33 +771,33 @@ function GalleryCarousel({ slides }: { slides: { url: string; label: string }[] 
         <span className="absolute left-3 top-3 z-10 rounded-lg bg-slate-950/70 border border-white/5 px-2.5 py-1 text-[10px] font-black tracking-widest text-slate-300">
           {i + 1} / {total}
         </span>
-        
+
         <SlotImage src={curr.url} label={curr.label} dark className="aspect-[4/3] w-full rounded-2xl object-cover hover:scale-105 transition duration-500" />
-        
+
         {total > 1 && (
           <>
             <button onClick={() => go(-1)} aria-label="Prev" className="absolute left-2.5 top-1/2 -translate-y-1/2 rounded-xl bg-slate-950/60 p-2 text-white hover:bg-slate-900 border border-white/5 shadow-md active:scale-90 transition">
-              <ChevronLeft className="h-5 w-5 text-emerald-400"/>
+              <ChevronLeft className="h-5 w-5 text-emerald-400" />
             </button>
             <button onClick={() => go(1)} aria-label="Next" className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-xl bg-slate-950/60 p-2 text-white hover:bg-slate-900 border border-white/5 shadow-md active:scale-90 transition">
-              <ChevronRight className="h-5 w-5 text-emerald-400"/>
+              <ChevronRight className="h-5 w-5 text-emerald-400" />
             </button>
             <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
               {slides.map((_, n) => (
                 <button key={n} onClick={() => setI(n)} aria-label={`Slide ${n + 1}`}
-                  className={`h-1.5 rounded-full transition-all duration-200 ${n === i ? "w-6 bg-emerald-400" : "w-1.5 bg-slate-500/50"}`}/>
+                  className={`h-1.5 rounded-full transition-all duration-200 ${n === i ? "w-6 bg-emerald-400" : "w-1.5 bg-slate-500/50"}`} />
               ))}
             </div>
           </>
         )}
       </div>
-      
+
       {total > 1 && (
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-800">
           {slides.map((s, n) => (
             <button key={n} onClick={() => setI(n)}
               className={`aspect-square w-16 flex-none overflow-hidden rounded-xl border-2 transition ${n === i ? "border-emerald-400 scale-95" : "border-slate-800/80 hover:border-slate-700"}`}>
-              <img src={s.url} alt={s.label} className="h-full w-full object-cover"/>
+              <img src={s.url} alt={s.label} className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
@@ -887,7 +887,7 @@ function OrderForm({ packages, whatsapp, email, phone }: { packages: Package[]; 
       if (email) {
         try {
           await notifyNewOrder({ data: { to: email, subject: `NEW ORDER — ${form.name.trim()}`, text: lines } });
-        } catch {}
+        } catch { }
       }
       if (typeof window !== "undefined") {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -896,6 +896,27 @@ function OrderForm({ packages, whatsapp, email, phone }: { packages: Package[]; 
       }
       setSuccess(true);
       setForm({ name: "", phone: "", altPhone: "", address: "", state: "", pkg: "" });
+
+      // Build WhatsApp message URL and redirect
+      const whatsappMsg = [
+        "Hello, I just placed an order on your store:",
+        "",
+        `*Name:* ${form.name.trim()}`,
+        `*Phone:* ${form.phone.trim()}`,
+        `*Alt Phone:* ${form.altPhone.trim() || "N/A"}`,
+        `*Address:* ${form.address.trim()}`,
+        `*State:* ${form.state}`,
+        `*Package:* ${selectedPkg.title}${selectedPkg.bonus_text ? ` + ${selectedPkg.bonus_text}` : ""}`,
+        `*Quantity:* ${selectedPkg.quantity}`,
+        `*Total:* ₦${selectedPkg.price.toLocaleString()}`
+      ].join("\n");
+
+      const cleanWhatsapp = (whatsapp || phone || "2348037477275").replace(/[^0-9]/g, "");
+      const whatsappUrl = `https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(whatsappMsg)}`;
+      
+      if (typeof window !== "undefined") {
+        window.location.href = whatsappUrl;
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -939,22 +960,22 @@ function OrderForm({ packages, whatsapp, email, phone }: { packages: Package[]; 
         <h2 className="text-2xl font-black text-white sm:text-3xl">Place Your Order Below 👇</h2>
         <p className="text-sm text-slate-400 font-medium">Free shipping. Pay only when the delivery agent brings it to your door.</p>
       </div>
-      
+
       <input required value={form.name} onChange={update("name")} placeholder="Your Full Name *" className={inputCls} />
       <input required value={form.phone} onChange={update("phone")} placeholder="Your Active Phone Number *" className={inputCls} />
       <input value={form.altPhone} onChange={update("altPhone")} placeholder="Alternative Phone Number (Optional)" className={inputCls} />
       <textarea required value={form.address} onChange={update("address")} placeholder="Full Delivery Address (Street name, area, house number) *" rows={3} className={inputCls} />
-      
+
       <select required value={form.state} onChange={update("state")} className={inputCls}>
         <option value="" disabled className="text-slate-700">Select Your Delivery State *</option>
         {STATES.map((s) => <option key={s} value={s} className="bg-slate-950 text-slate-200">{s}</option>)}
       </select>
-      
+
       <div className="space-y-2.5">
         <p className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           Select Your Bundle Deal * <span className="text-red-500">(MINIMUM 2 PIECES)</span>
         </p>
-        
+
         <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/40">
           {packages.map((p) => (
             <label key={p.id} className={`flex cursor-pointer items-center justify-between border-b border-slate-900 px-4 py-4 hover:bg-slate-900/35 transition last:border-0 ${form.pkg === p.id ? "bg-emerald-500/5" : ""}`}>
@@ -974,9 +995,9 @@ function OrderForm({ packages, whatsapp, email, phone }: { packages: Package[]; 
           ))}
         </div>
       </div>
-      
+
       {error && <p className="text-sm font-bold text-red-400 border border-red-500/20 bg-red-500/5 p-3 rounded-xl text-center">{error}</p>}
-      
+
       <button disabled={submitting} className="lit-cta w-full rounded-2xl py-4.5 text-base font-black text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 active:scale-[0.99] transition shadow-lg shadow-emerald-500/25 disabled:opacity-60">
         {submitting ? "Submitting Order..." : "✅ Confirm My Order Now"}
       </button>

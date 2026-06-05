@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { db, type Product, type Spec, type Feature, type Package, type SiteSettings, type Review, type FAQ, type GalleryImage } from "@/lib/cms-types";
+import { getProductBySlugData } from "@/lib/api/example.functions";
 import ProductSalesFunnel from "@/components/ProductSalesFunnel";
+import type { Product, Spec, Feature, Package, SiteSettings, Review, FAQ, GalleryImage } from "@/lib/cms-types";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
@@ -28,51 +29,32 @@ function ProductSlugPage() {
   const { slug } = Route.useParams();
   const [data, setData] = useState<CmsData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        // Fetch the product by slug
-        const { data: productData, error: prodErr } = await db
-          .from("products")
-          .select("*")
-          .eq("slug", slug)
-          .maybeSingle();
-
-        if (prodErr) throw prodErr;
-        if (!productData) {
+        const res = await getProductBySlugData({ data: { slug } });
+        if (!res) {
           setError(`Product not found with slug: ${slug}`);
           return;
         }
-
-        const product = productData as Product;
-        const productId = product.id;
-
-        const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([
-          db.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"),
-          db.from("product_features").select("*").eq("product_id", productId).order("sort_order"),
-          db.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"),
-          db.from("site_settings").select("*").eq("id", 1).maybeSingle(),
-          db.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"),
-          db.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"),
-          db.from("product_images").select("*").eq("product_id", productId).order("sort_order"),
-        ]);
-
-        setData({
-          product,
-          specs: specsRes.data ?? [],
-          features: featRes.data ?? [],
-          packages: pkgRes.data ?? [],
-          settings: setRes.data ?? null,
-          reviews: revRes.data ?? [],
-          faqs: faqRes.data ?? [],
-          images: imgRes.data ?? [],
-        });
+        setData(res);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Failed to load product.");
+      } finally {
+        setLoading(false);
       }
     })();
   }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-400 font-bold uppercase tracking-wider">
+        Loading…
+      </div>
+    );
+  }
 
   if (error) {
     return (

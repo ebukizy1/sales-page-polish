@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { db } from "@/lib/cms-types";
+import { getOffersData } from "@/lib/api/example.functions";
 import { Tag, ArrowRight, Gift } from "lucide-react";
 
 export const Route = createFileRoute("/offers")({
@@ -32,31 +32,15 @@ function OffersPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await db
-        .from("offers")
-        .select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order")
-        .eq("active", true)
-        .order("sort_order", { ascending: true });
-
-      const nextOffers = (data as Offer[] | null) ?? [];
-      setOffers(nextOffers);
-
-      const slugs = Array.from(
-        new Set(nextOffers.map((o) => o.product_slug).filter((x): x is string => !!x)),
-      );
-
-      if (slugs.length) {
-        const { data: products } = await db.from("products").select("slug,hero_image_url").in("slug", slugs);
-        const map: Record<string, string> = {};
-        (products as Array<{ slug: string; hero_image_url: string | null }> | null)?.forEach((p) => {
-          if (p.hero_image_url) map[p.slug] = p.hero_image_url;
-        });
-        setProductImages(map);
-      } else {
-        setProductImages({});
+      try {
+        const res = await getOffersData();
+        setOffers(res.offers);
+        setProductImages(res.productImages);
+      } catch (err) {
+        console.error("Failed to load offers:", err);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     })();
   }, []);
 
