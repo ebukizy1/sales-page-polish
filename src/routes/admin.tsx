@@ -1,0 +1,554 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { db, type Product, type Spec, type Feature, type GalleryImage, type Package, type SiteSettings, type Offer } from "@/lib/cms-types";
+import type { Session } from "@supabase/supabase-js";
+
+export const Route = createFileRoute("/admin")({
+  head: () => ({ meta: [{ title: "Admin Dashboard" }, { name: "robots", content: "noindex" }] }),
+  component: AdminPage,
+});
+
+type Tab = "orders" | "products" | "offers" | "settings";
+
+function AdminPage() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [tab, setTab] = useState<Tab>("orders");
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session) { setIsAdmin(null); return; }
+    supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [session]);
+
+  const claimAdmin = async () => {
+    setMsg("");
+    const { data, error } = await supabase.rpc("claim_first_admin");
+    if (error) { setMsg(error.message); return; }
+    if (data === true) { setIsAdmin(true); setMsg("You are now admin."); }
+    else setMsg("An admin already exists.");
+  };
+
+  if (!session) return <AuthForm />;
+  if (isAdmin === null) return <Centered>Checking permissions…</Centered>;
+  if (!isAdmin) {
+    return (
+      <Centered>
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-extrabold">Not an admin</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Signed in as <strong>{session.user.email}</strong>. Claim admin if no admin exists yet.
+          </p>
+          <button onClick={claimAdmin} className="mt-5 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground">
+            Claim Admin (First-Time Setup)
+          </button>
+          {msg && <p className="mt-3 text-sm text-destructive">{msg}</p>}
+          <button onClick={() => supabase.auth.signOut()} className="mt-4 block w-full text-xs underline">Sign out</button>
+        </div>
+      </Centered>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">Admin Dashboard</p>
+            <h1 className="text-xl font-extrabold capitalize">{tab}</h1>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Link to="/" className="underline">Home</Link>
+            <Link to="/offers" className="underline">Offers</Link>
+            <button onClick={() => supabase.auth.signOut()} className="rounded-lg border px-3 py-1.5 font-semibold">Sign out</button>
+          </div>
+        </div>
+        <div className="mx-auto max-w-7xl px-4">
+          <nav className="flex gap-1 overflow-x-auto">
+            {(["orders","products","offers","settings"] as Tab[]).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className={`whitespace-nowrap rounded-t-lg px-4 py-2.5 text-sm font-bold capitalize ${tab === t ? "bg-background border border-b-0 border-border text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                {t}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-7xl px-4 py-8">
+        {tab === "orders" && <OrdersTab />}
+        {tab === "products" && <ProductsTab />}
+        {tab === "offers" && <OffersTab />}
+        {tab === "settings" && <SettingsTab />}
+      </section>
+    </main>
+  );
+}
+
+/* =================== ORDERS =================== */
+type Order = {
+  id: string; customer_name: string; phone: string; alt_phone: string | null;
+  address: string; state: string; package_label: string; quantity: number;
+  total_amount: number; status: string; created_at: string;
+};
+const ORDER_STATUSES = ["pending","confirmed","processing","shipped","delivered","cancelled","new","called","dispatched"];
+
+function OrdersTab() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const load = useCallback(() => {
+    setLoading(true);
+    supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(500)
+      .then(({ data }) => { setOrders((data as Order[]) ?? []); setLoading(false); });
+  }, []);
+  useEffect(load, [load]);
+
+  const updateStatus = async (id: string, status: string) => {
+    await supabase.from("orders").update({ status }).eq("id", id);
+    setOrders((o) => o.map((x) => x.id === id ? { ...x, status } : x));
+  };
+
+  return (
+    <>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{orders.length} total</p>
+        <button onClick={load} className="text-xs underline">Refresh</button>
+      </div>
+      {loading && <p className="text-muted-foreground">Loading…</p>}
+      {!loading && orders.length === 0 && <p className="text-muted-foreground">No orders yet.</p>}
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>{["Date","Customer","Phone","State","Address","Package","Qty","Total","Status"].map((h) => (
+              <th key={h} className="px-3 py-3 font-bold">{h}</th>
+            ))}</tr>
+          </thead>
+          <tbody>
+            {orders.map((o) => (
+              <tr key={o.id} className="border-t border-border align-top">
+                <td className="px-3 py-3 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString()}</td>
+                <td className="px-3 py-3 font-semibold">{o.customer_name}</td>
+                <td className="px-3 py-3">
+                  <a className="text-primary underline" href={`tel:${o.phone}`}>{o.phone}</a>
+                  {o.alt_phone && <div className="text-xs text-muted-foreground">{o.alt_phone}</div>}
+                </td>
+                <td className="px-3 py-3">{o.state}</td>
+                <td className="px-3 py-3 max-w-[220px] text-xs">{o.address}</td>
+                <td className="px-3 py-3 text-xs">{o.package_label}</td>
+                <td className="px-3 py-3">{o.quantity}</td>
+                <td className="px-3 py-3 font-extrabold text-primary">₦{o.total_amount.toLocaleString()}</td>
+                <td className="px-3 py-3">
+                  <select value={o.status} onChange={(e) => updateStatus(o.id, e.target.value)} className="rounded border border-border bg-background px-2 py-1 text-xs">
+                    {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+/* =================== PRODUCTS =================== */
+function ProductsTab() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selected, setSelected] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data } = await db.from("products").select("*").order("created_at", { ascending: false });
+    setProducts((data as Product[]) ?? []);
+    setLoading(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  if (selected) return <ProductEditor product={selected} onClose={() => { setSelected(null); load(); }} />;
+
+  const createNew = async () => {
+    const slug = `product-${Date.now()}`;
+    const { data, error } = await db.from("products").insert({ slug, title: "New Product", active: false }).select().single();
+    if (error) { alert(error.message); return; }
+    setSelected(data as Product);
+  };
+
+  return (
+    <>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{products.length} products</p>
+        <button onClick={createNew} className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">+ New Product</button>
+      </div>
+      {loading && <p className="text-muted-foreground">Loading…</p>}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((p) => (
+          <button key={p.id} onClick={() => setSelected(p)} className="overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+            {p.hero_image_url ? (
+              <img src={p.hero_image_url} alt={p.title} className="aspect-video w-full object-cover" />
+            ) : (
+              <div className="aspect-video w-full bg-secondary" />
+            )}
+            <div className="p-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold">{p.title}</h3>
+                {p.featured && <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">Featured</span>}
+                {!p.active && <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">Inactive</span>}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">/{p.slug}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ProductEditor({ product, onClose }: { product: Product; onClose: () => void }) {
+  const [p, setP] = useState<Product>(product);
+  const [specs, setSpecs] = useState<Spec[]>([]);
+  const [features, setFeatures] = useState<Feature[]>([]);
+  const [gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const loadAll = useCallback(async () => {
+    const [s, f, g, k] = await Promise.all([
+      db.from("product_specifications").select("*").eq("product_id", p.id).order("sort_order"),
+      db.from("product_features").select("*").eq("product_id", p.id).order("sort_order"),
+      db.from("product_images").select("*").eq("product_id", p.id).order("sort_order"),
+      db.from("packages").select("*").eq("product_id", p.id).order("sort_order"),
+    ]);
+    setSpecs(s.data ?? []); setFeatures(f.data ?? []); setGallery(g.data ?? []); setPackages(k.data ?? []);
+  }, [p.id]);
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  const set = <K extends keyof Product>(k: K, v: Product[K]) => setP((x) => ({ ...x, [k]: v }));
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await db.from("products").update({
+      slug: p.slug, title: p.title, short_description: p.short_description, long_description: p.long_description,
+      hero_image_url: p.hero_image_url, video_url: p.video_url, warranty_text: p.warranty_text,
+      delivery_text: p.delivery_text, active: p.active, featured: p.featured,
+    }).eq("id", p.id);
+    setSaving(false);
+    if (error) alert(error.message); else alert("Saved");
+  };
+
+  const remove = async () => {
+    if (!confirm("Delete this product and all its specs/features/images/packages?")) return;
+    await db.from("products").delete().eq("id", p.id);
+    onClose();
+  };
+
+  const uploadHero = async (file: File) => {
+    const path = `${p.id}/hero-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("products").upload(path, file, { upsert: true });
+    if (error) { alert(error.message); return; }
+    const { data } = supabase.storage.from("products").getPublicUrl(path);
+    set("hero_image_url", data.publicUrl);
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button onClick={onClose} className="text-sm underline">← Back to products</button>
+        <div className="flex gap-2">
+          <button onClick={remove} className="rounded-xl border border-destructive px-4 py-2 text-sm font-bold text-destructive">Delete</button>
+          <button onClick={save} disabled={saving} className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60">{saving ? "Saving…" : "Save Product"}</button>
+        </div>
+      </div>
+
+      <Section title="Basic Info">
+        <Field label="Title"><input className={inputCls} value={p.title} onChange={(e) => set("title", e.target.value)} /></Field>
+        <Field label="Slug"><input className={inputCls} value={p.slug} onChange={(e) => set("slug", e.target.value)} /></Field>
+        <Field label="Short Description"><input className={inputCls} value={p.short_description ?? ""} onChange={(e) => set("short_description", e.target.value)} /></Field>
+        <Field label="Long Description"><textarea rows={4} className={inputCls} value={p.long_description ?? ""} onChange={(e) => set("long_description", e.target.value)} /></Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Warranty Text"><input className={inputCls} value={p.warranty_text ?? ""} onChange={(e) => set("warranty_text", e.target.value)} /></Field>
+          <Field label="Delivery Text"><input className={inputCls} value={p.delivery_text ?? ""} onChange={(e) => set("delivery_text", e.target.value)} /></Field>
+        </div>
+        <Field label="Video URL (optional)"><input className={inputCls} value={p.video_url ?? ""} onChange={(e) => set("video_url", e.target.value)} /></Field>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={p.active} onChange={(e) => set("active", e.target.checked)} /> Active</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={p.featured} onChange={(e) => set("featured", e.target.checked)} /> Featured</label>
+        </div>
+      </Section>
+
+      <Section title="Hero Image">
+        {p.hero_image_url && <img src={p.hero_image_url} alt="" className="mb-3 h-40 rounded-lg object-cover" />}
+        <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadHero(e.target.files[0])} />
+        <Field label="Or paste URL"><input className={inputCls} value={p.hero_image_url ?? ""} onChange={(e) => set("hero_image_url", e.target.value)} /></Field>
+      </Section>
+
+      <SpecsSection productId={p.id} items={specs} reload={loadAll} />
+      <FeaturesSection productId={p.id} items={features} reload={loadAll} />
+      <GallerySection productId={p.id} items={gallery} reload={loadAll} />
+      <PackagesSection productId={p.id} items={packages} reload={loadAll} />
+    </div>
+  );
+}
+
+function SpecsSection({ productId, items, reload }: { productId: string; items: Spec[]; reload: () => void }) {
+  const add = async () => { await db.from("product_specifications").insert({ product_id: productId, label: "New", value: "", sort_order: items.length }); reload(); };
+  const upd = async (id: string, patch: Partial<Spec>) => { await db.from("product_specifications").update(patch).eq("id", id); reload(); };
+  const del = async (id: string) => { await db.from("product_specifications").delete().eq("id", id); reload(); };
+  return (
+    <Section title="Specifications" action={<button onClick={add} className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">+ Add</button>}>
+      <div className="space-y-2">
+        {items.map((s) => (
+          <div key={s.id} className="grid grid-cols-[1fr_2fr_auto_auto] gap-2">
+            <input defaultValue={s.label} onBlur={(e) => e.target.value !== s.label && upd(s.id, { label: e.target.value })} className={inputCls} placeholder="Label" />
+            <input defaultValue={s.value} onBlur={(e) => e.target.value !== s.value && upd(s.id, { value: e.target.value })} className={inputCls} placeholder="Value" />
+            <input type="number" defaultValue={s.sort_order} onBlur={(e) => upd(s.id, { sort_order: Number(e.target.value) })} className={`${inputCls} w-20`} />
+            <button onClick={() => del(s.id)} className="rounded-lg border border-destructive px-3 text-xs font-bold text-destructive">Del</button>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function FeaturesSection({ productId, items, reload }: { productId: string; items: Feature[]; reload: () => void }) {
+  const add = async () => { await db.from("product_features").insert({ product_id: productId, title: "New feature", sort_order: items.length }); reload(); };
+  const upd = async (id: string, patch: Partial<Feature>) => { await db.from("product_features").update(patch).eq("id", id); reload(); };
+  const del = async (id: string) => { await db.from("product_features").delete().eq("id", id); reload(); };
+  return (
+    <Section title="Features" action={<button onClick={add} className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">+ Add</button>}>
+      <div className="space-y-3">
+        {items.map((f) => (
+          <div key={f.id} className="grid grid-cols-1 gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_2fr_auto_auto_auto]">
+            <input defaultValue={f.title} onBlur={(e) => upd(f.id, { title: e.target.value })} className={inputCls} placeholder="Title" />
+            <input defaultValue={f.description ?? ""} onBlur={(e) => upd(f.id, { description: e.target.value })} className={inputCls} placeholder="Description" />
+            <input defaultValue={f.icon ?? ""} onBlur={(e) => upd(f.id, { icon: e.target.value })} className={`${inputCls} w-32`} placeholder="Icon (e.g. Sun)" />
+            <input type="number" defaultValue={f.sort_order} onBlur={(e) => upd(f.id, { sort_order: Number(e.target.value) })} className={`${inputCls} w-20`} />
+            <button onClick={() => del(f.id)} className="rounded-lg border border-destructive px-3 text-xs font-bold text-destructive">Del</button>
+          </div>
+        ))}
+        <p className="text-xs text-muted-foreground">Icon names: Sun, Award, BatteryFull, ShieldCheck, Zap, Droplet, Wrench, Leaf, Truck, Lock, Star, CheckCircle2</p>
+      </div>
+    </Section>
+  );
+}
+
+function GallerySection({ productId, items, reload }: { productId: string; items: GalleryImage[]; reload: () => void }) {
+  const upload = async (file: File) => {
+    const path = `${productId}/gallery-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("products").upload(path, file);
+    if (error) { alert(error.message); return; }
+    const { data } = supabase.storage.from("products").getPublicUrl(path);
+    await db.from("product_images").insert({ product_id: productId, url: data.publicUrl, sort_order: items.length });
+    reload();
+  };
+  const del = async (id: string) => { await db.from("product_images").delete().eq("id", id); reload(); };
+  const upd = async (id: string, patch: Partial<GalleryImage>) => { await db.from("product_images").update(patch).eq("id", id); reload(); };
+  return (
+    <Section title="Gallery" action={
+      <label className="cursor-pointer rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
+        + Upload<input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+      </label>
+    }>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((g) => (
+          <div key={g.id} className="overflow-hidden rounded-xl border border-border">
+            <img src={g.url} alt={g.alt ?? ""} className="aspect-square w-full object-cover" />
+            <div className="space-y-2 p-2">
+              <input defaultValue={g.alt ?? ""} onBlur={(e) => upd(g.id, { alt: e.target.value })} className={inputCls} placeholder="Alt text" />
+              <div className="flex gap-2">
+                <input type="number" defaultValue={g.sort_order} onBlur={(e) => upd(g.id, { sort_order: Number(e.target.value) })} className={`${inputCls} w-20`} />
+                <button onClick={() => del(g.id)} className="flex-1 rounded-lg border border-destructive px-3 py-1 text-xs font-bold text-destructive">Delete</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function PackagesSection({ productId, items, reload }: { productId: string; items: Package[]; reload: () => void }) {
+  const add = async () => { await db.from("packages").insert({ product_id: productId, package_code: `pkg${Date.now()}`, title: "New Package", quantity: 1, price: 0, sort_order: items.length, active: true }); reload(); };
+  const upd = async (id: string, patch: Partial<Package>) => { await db.from("packages").update(patch).eq("id", id); reload(); };
+  const del = async (id: string) => { await db.from("packages").delete().eq("id", id); reload(); };
+  return (
+    <Section title="Packages" action={<button onClick={add} className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">+ Add</button>}>
+      <div className="space-y-3">
+        {items.map((k) => (
+          <div key={k.id} className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_80px_120px_1fr_70px_auto_auto]">
+            <input defaultValue={k.package_code} onBlur={(e) => upd(k.id, { package_code: e.target.value })} className={inputCls} placeholder="Code" />
+            <input defaultValue={k.title} onBlur={(e) => upd(k.id, { title: e.target.value })} className={inputCls} placeholder="Title" />
+            <input type="number" defaultValue={k.quantity} onBlur={(e) => upd(k.id, { quantity: Number(e.target.value) })} className={inputCls} placeholder="Qty" />
+            <input type="number" defaultValue={k.price} onBlur={(e) => upd(k.id, { price: Number(e.target.value) })} className={inputCls} placeholder="Price ₦" />
+            <input defaultValue={k.bonus_text ?? ""} onBlur={(e) => upd(k.id, { bonus_text: e.target.value })} className={inputCls} placeholder="Bonus" />
+            <input type="number" defaultValue={k.sort_order} onBlur={(e) => upd(k.id, { sort_order: Number(e.target.value) })} className={inputCls} placeholder="Order" />
+            <label className="flex items-center gap-1 text-xs"><input type="checkbox" defaultChecked={k.active} onChange={(e) => upd(k.id, { active: e.target.checked })} /> Active</label>
+            <button onClick={() => del(k.id)} className="rounded-lg border border-destructive px-3 text-xs font-bold text-destructive">Del</button>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+/* =================== OFFERS =================== */
+function OffersTab() {
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data } = await db.from("offers").select("*").order("sort_order");
+    setOffers((data as Offer[]) ?? []); setLoading(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const add = async () => {
+    await db.from("offers").insert({ title: "New Offer", price: 0, sort_order: offers.length, active: true });
+    load();
+  };
+  const upd = async (id: string, patch: Partial<Offer>) => { await db.from("offers").update(patch).eq("id", id); load(); };
+  const del = async (id: string) => { if (confirm("Delete offer?")) { await db.from("offers").delete().eq("id", id); load(); } };
+
+  const uploadImage = async (id: string, file: File) => {
+    const path = `${id}/${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("offers").upload(path, file, { upsert: true });
+    if (error) { alert(error.message); return; }
+    const { data } = supabase.storage.from("offers").getPublicUrl(path);
+    upd(id, { image_url: data.publicUrl });
+  };
+
+  return (
+    <>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{offers.length} offers</p>
+        <button onClick={add} className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">+ New Offer</button>
+      </div>
+      {loading && <p>Loading…</p>}
+      <div className="space-y-4">
+        {offers.map((o) => (
+          <div key={o.id} className="rounded-2xl border border-border bg-card p-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Title"><input defaultValue={o.title} onBlur={(e) => upd(o.id, { title: e.target.value })} className={inputCls} /></Field>
+              <Field label="Badge"><input defaultValue={o.badge ?? ""} onBlur={(e) => upd(o.id, { badge: e.target.value })} className={inputCls} /></Field>
+              <Field label="Description"><input defaultValue={o.description ?? ""} onBlur={(e) => upd(o.id, { description: e.target.value })} className={inputCls} /></Field>
+              <Field label="Price ₦"><input type="number" defaultValue={o.price} onBlur={(e) => upd(o.id, { price: Number(e.target.value) })} className={inputCls} /></Field>
+              <Field label="Original Price ₦"><input type="number" defaultValue={o.original_price ?? 0} onBlur={(e) => upd(o.id, { original_price: Number(e.target.value) || null })} className={inputCls} /></Field>
+              <Field label="Sort Order"><input type="number" defaultValue={o.sort_order} onBlur={(e) => upd(o.id, { sort_order: Number(e.target.value) })} className={inputCls} /></Field>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              {o.image_url && <img src={o.image_url} alt="" className="h-16 w-16 rounded-lg object-cover" />}
+              <label className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-xs font-bold">
+                Upload Image<input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(o.id, e.target.files[0])} />
+              </label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked={o.active} onChange={(e) => upd(o.id, { active: e.target.checked })} /> Active</label>
+              <button onClick={() => del(o.id)} className="ml-auto rounded-lg border border-destructive px-3 py-1.5 text-xs font-bold text-destructive">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* =================== SETTINGS =================== */
+function SettingsTab() {
+  const [s, setS] = useState<SiteSettings | null>(null);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    db.from("site_settings").select("*").eq("id", 1).maybeSingle()
+      .then(({ data }: { data: SiteSettings | null }) => setS(data ?? {
+        id: 1, store_name: "", phone: "", whatsapp: "", email: "", delivery_text: "", warranty_text: "",
+        facebook_url: "", instagram_url: "", tiktok_url: "",
+      }));
+  }, []);
+
+  if (!s) return <p>Loading…</p>;
+
+  const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) => setS((x) => x ? { ...x, [k]: v } : x);
+  const save = async () => {
+    setSaving(true);
+    const { error } = await db.from("site_settings").upsert({ ...s, id: 1, updated_at: new Date().toISOString() });
+    setSaving(false);
+    if (error) alert(error.message); else alert("Saved");
+  };
+
+  return (
+    <div className="max-w-2xl space-y-5">
+      <Field label="Store Name"><input className={inputCls} value={s.store_name ?? ""} onChange={(e) => set("store_name", e.target.value)} /></Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Phone"><input className={inputCls} value={s.phone ?? ""} onChange={(e) => set("phone", e.target.value)} /></Field>
+        <Field label="WhatsApp (e.g. 2348012345678)"><input className={inputCls} value={s.whatsapp ?? ""} onChange={(e) => set("whatsapp", e.target.value)} /></Field>
+      </div>
+      <Field label="Email"><input className={inputCls} value={s.email ?? ""} onChange={(e) => set("email", e.target.value)} /></Field>
+      <Field label="Delivery Text"><input className={inputCls} value={s.delivery_text ?? ""} onChange={(e) => set("delivery_text", e.target.value)} /></Field>
+      <Field label="Warranty Text"><input className={inputCls} value={s.warranty_text ?? ""} onChange={(e) => set("warranty_text", e.target.value)} /></Field>
+      <Field label="Facebook URL"><input className={inputCls} value={s.facebook_url ?? ""} onChange={(e) => set("facebook_url", e.target.value)} /></Field>
+      <Field label="Instagram URL"><input className={inputCls} value={s.instagram_url ?? ""} onChange={(e) => set("instagram_url", e.target.value)} /></Field>
+      <Field label="TikTok URL"><input className={inputCls} value={s.tiktok_url ?? ""} onChange={(e) => set("tiktok_url", e.target.value)} /></Field>
+      <button onClick={save} disabled={saving} className="rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground disabled:opacity-60">{saving ? "Saving…" : "Save Settings"}</button>
+    </div>
+  );
+}
+
+/* =================== Shared =================== */
+const inputCls = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/30";
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <label className="block"><span className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</span>{children}</label>;
+}
+
+function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-extrabold">{title}</h2>
+        {action}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
+}
+
+function Centered({ children }: { children: React.ReactNode }) {
+  return <div className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">{children}</div>;
+}
+
+function AuthForm() {
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState(""); const [password, setPassword] = useState("");
+  const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault(); setErr(""); setBusy(true);
+    const fn = mode === "signin"
+      ? supabase.auth.signInWithPassword({ email, password })
+      : supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/admin` } });
+    const { error } = await fn; setBusy(false);
+    if (error) setErr(error.message);
+  };
+  return (
+    <Centered>
+      <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-7 shadow-xl">
+        <div className="text-center">
+          <h1 className="text-2xl font-extrabold">Admin Access</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{mode === "signin" ? "Sign in" : "Create your admin account"}</p>
+        </div>
+        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full rounded-xl border border-border bg-background px-4 py-3" />
+        <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (min 6)" className="w-full rounded-xl border border-border bg-background px-4 py-3" />
+        {err && <p className="text-sm text-destructive">{err}</p>}
+        <button disabled={busy} className="w-full rounded-xl bg-primary px-5 py-3 font-extrabold text-primary-foreground disabled:opacity-60">{busy ? "…" : mode === "signin" ? "Sign In" : "Create Account"}</button>
+        <button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="block w-full text-xs underline">
+          {mode === "signin" ? "First time? Create admin account" : "Have an account? Sign in"}
+        </button>
+        <p className="text-center text-xs text-muted-foreground">← <Link to="/" className="underline">Back to store</Link></p>
+      </form>
+    </Centered>
+  );
+}
