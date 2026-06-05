@@ -1,4 +1,4 @@
-import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-Cp81I7r4.mjs";
+import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-gDmSD4tF.mjs";
 import { c as createClient } from "../_libs/supabase__supabase-js.mjs";
 import process$1 from "node:process";
 import "../_libs/seroval.mjs";
@@ -145,25 +145,35 @@ const getLandingPageData_createServerFn_handler = createServerRpc({
 const getLandingPageData = createServerFn({
   method: "GET"
 }).handler(getLandingPageData_createServerFn_handler, async () => {
-  const {
-    data: products
-  } = await supabaseAdmin.from("products").select("*").eq("active", true).order("featured", {
-    ascending: false
-  }).limit(1);
-  const product = products?.[0] ?? null;
-  if (!product) return null;
-  const productId = product.id;
-  const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([supabaseAdmin.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_features").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), supabaseAdmin.from("site_settings").select("*").eq("id", 1).maybeSingle(), supabaseAdmin.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
-  return {
-    product,
-    specs: specsRes.data ?? [],
-    features: featRes.data ?? [],
-    packages: pkgRes.data ?? [],
-    settings: setRes.data ?? null,
-    reviews: revRes.data ?? [],
-    faqs: faqRes.data ?? [],
-    images: imgRes.data ?? []
-  };
+  try {
+    const {
+      data: products
+    } = await supabaseAdmin.from("products").select("*").eq("active", true).order("featured", {
+      ascending: false
+    }).limit(1);
+    const product = products?.[0] ?? null;
+    if (!product) return {
+      product: null
+    };
+    const productId = product.id;
+    const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([supabaseAdmin.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_features").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), supabaseAdmin.from("site_settings").select("*").eq("id", 1).maybeSingle(), supabaseAdmin.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
+    return {
+      product,
+      specs: specsRes.data ?? [],
+      features: featRes.data ?? [],
+      packages: pkgRes.data ?? [],
+      settings: setRes.data ?? null,
+      reviews: revRes.data ?? [],
+      faqs: faqRes.data ?? [],
+      images: imgRes.data ?? []
+    };
+  } catch (err) {
+    console.error("Error in getLandingPageData server function:", err);
+    return {
+      error: err instanceof Error ? err.message : String(err),
+      envKeys: Object.keys(process.env).filter((k) => k.includes("SUPABASE") || k.includes("VITE"))
+    };
+  }
 });
 const getProductBySlugData_createServerFn_handler = createServerRpc({
   id: "d08d74cdba5b8cdbfa340fa6195950e7cd7f7c47800ce1569c511a523b4cdaf5",
