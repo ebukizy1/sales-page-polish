@@ -1,7 +1,7 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
-import { s as supabase } from "./client-B568P1DA.mjs";
-import { d as db } from "./cms-types-BxiKuzEW.mjs";
+import { s as supabase } from "./client-C3PSvQqo.mjs";
+import { d as db } from "./cms-types-DUiZVPkm.mjs";
 import "../_libs/tanstack__router-core.mjs";
 import "../_libs/tanstack__history.mjs";
 import "../_libs/cookie-es.mjs";
@@ -15,15 +15,8 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "../_libs/supabase__supabase-js.mjs";
-import "../_libs/supabase__postgrest-js.mjs";
-import "../_libs/supabase__realtime-js.mjs";
 import "../_libs/supabase__phoenix.mjs";
-import "../_libs/supabase__storage-js.mjs";
 import "../_libs/iceberg-js.mjs";
-import "../_libs/supabase__auth-js.mjs";
-import "tslib";
-import "../_libs/supabase__functions-js.mjs";
 function AdminPage() {
   const [session, setSession] = reactExports.useState(null);
   const [isAdmin, setIsAdmin] = reactExports.useState(null);

@@ -1,6 +1,5 @@
-import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-BBizeIyi.mjs";
-import { s as supabase } from "./client-B568P1DA.mjs";
-import { c as createClient } from "../_libs/supabase__supabase-js.mjs";
+import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-ns6X4ZMQ.mjs";
+import { c as createClient, s as supabase } from "./client-C3PSvQqo.mjs";
 import process$1 from "node:process";
 import "../_libs/seroval.mjs";
 import "../_libs/react.mjs";
@@ -22,14 +21,8 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "../_libs/supabase__postgrest-js.mjs";
-import "../_libs/supabase__realtime-js.mjs";
 import "../_libs/supabase__phoenix.mjs";
-import "../_libs/supabase__storage-js.mjs";
 import "../_libs/iceberg-js.mjs";
-import "../_libs/supabase__auth-js.mjs";
-import "tslib";
-import "../_libs/supabase__functions-js.mjs";
 var createServerRpc = (serverFnMeta, splitImportFn) => {
   const url = "/_serverFn/" + serverFnMeta.id;
   return Object.assign(splitImportFn, {

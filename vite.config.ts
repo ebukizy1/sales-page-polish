@@ -11,6 +11,7 @@ export default defineConfig({
     preset: "vercel",
     externals: {
       inline: ["tslib"],
+      traceInclude: ["node_modules/tslib/**"],
     },
   },
   tanstackStart: {
@@ -20,7 +21,15 @@ export default defineConfig({
   },
   vite: {
     ssr: {
-      noExternal: ["tslib"],
+      noExternal: [
+        "tslib",
+        "@supabase/supabase-js",
+        "@supabase/auth-js",
+        "@supabase/functions-js",
+        "@supabase/postgrest-js",
+        "@supabase/storage-js",
+        "@supabase/realtime-js"
+      ],
     },
   },
 });
