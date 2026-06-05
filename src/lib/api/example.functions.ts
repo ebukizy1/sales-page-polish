@@ -88,13 +88,13 @@ export const getLandingPageData = createServerFn({ method: "GET" })
 
       return {
         product: product as Product,
-        specs: specsRes.data ?? [],
-        features: featRes.data ?? [],
-        packages: pkgRes.data ?? [],
-        settings: setRes.data ?? null,
-        reviews: revRes.data ?? [],
-        faqs: faqRes.data ?? [],
-        images: imgRes.data ?? [],
+        specs: (specsRes.data as Spec[]) ?? [],
+        features: (featRes.data as Feature[]) ?? [],
+        packages: (pkgRes.data as Package[]) ?? [],
+        settings: (setRes.data as SiteSettings) ?? null,
+        reviews: (revRes.data as Review[]) ?? [],
+        faqs: (faqRes.data as FAQ[]) ?? [],
+        images: (imgRes.data as GalleryImage[]) ?? [],
       };
     } catch (err: unknown) {
       console.error("Error in getLandingPageData server function:", err);
@@ -131,13 +131,13 @@ export const getProductBySlugData = createServerFn({ method: "GET" })
 
     return {
       product: product as Product,
-      specs: specsRes.data ?? [],
-      features: featRes.data ?? [],
-      packages: pkgRes.data ?? [],
-      settings: setRes.data ?? null,
-      reviews: revRes.data ?? [],
-      faqs: faqRes.data ?? [],
-      images: imgRes.data ?? [],
+      specs: (specsRes.data as Spec[]) ?? [],
+      features: (featRes.data as Feature[]) ?? [],
+      packages: (pkgRes.data as Package[]) ?? [],
+      settings: (setRes.data as SiteSettings) ?? null,
+      reviews: (revRes.data as Review[]) ?? [],
+      faqs: (faqRes.data as FAQ[]) ?? [],
+      images: (imgRes.data as GalleryImage[]) ?? [],
     };
   });
 
