@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabase } from "@/integrations/supabase/client";
 import type { Product, Spec, Feature, Package, SiteSettings, Review, FAQ, GalleryImage, Offer } from "@/lib/cms-types";
 
 import { getServerConfig } from "../config.server";
@@ -64,7 +64,7 @@ export const notifyNewOrder = createServerFn({ method: "POST" })
 export const getLandingPageData = createServerFn({ method: "GET" })
   .handler(async () => {
     try {
-      const { data: products } = await supabaseAdmin
+      const { data: products } = await supabase
         .from("products")
         .select("*")
         .eq("active", true)
@@ -77,13 +77,13 @@ export const getLandingPageData = createServerFn({ method: "GET" })
       const productId = product.id;
 
       const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([
-        supabaseAdmin.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"),
-        supabaseAdmin.from("product_features").select("*").eq("product_id", productId).order("sort_order"),
-        supabaseAdmin.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"),
-        supabaseAdmin.from("site_settings").select("*").eq("id", 1).maybeSingle(),
-        supabaseAdmin.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"),
-        supabaseAdmin.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"),
-        supabaseAdmin.from("product_images").select("*").eq("product_id", productId).order("sort_order"),
+        supabase.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"),
+        supabase.from("product_features").select("*").eq("product_id", productId).order("sort_order"),
+        supabase.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"),
+        supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+        supabase.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"),
+        supabase.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"),
+        supabase.from("product_images").select("*").eq("product_id", productId).order("sort_order"),
       ]);
 
       return {
@@ -109,7 +109,7 @@ export const getProductBySlugData = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string() }))
   .handler(async ({ data }) => {
     const { slug } = data;
-    const { data: product } = await supabaseAdmin
+    const { data: product } = await supabase
       .from("products")
       .select("*")
       .eq("slug", slug)
@@ -120,13 +120,13 @@ export const getProductBySlugData = createServerFn({ method: "GET" })
     const productId = product.id;
 
     const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([
-      supabaseAdmin.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"),
-      supabaseAdmin.from("product_features").select("*").eq("product_id", productId).order("sort_order"),
-      supabaseAdmin.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"),
-      supabaseAdmin.from("site_settings").select("*").eq("id", 1).maybeSingle(),
-      supabaseAdmin.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"),
-      supabaseAdmin.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"),
-      supabaseAdmin.from("product_images").select("*").eq("product_id", productId).order("sort_order"),
+      supabase.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"),
+      supabase.from("product_features").select("*").eq("product_id", productId).order("sort_order"),
+      supabase.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"),
+      supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+      supabase.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"),
+      supabase.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"),
+      supabase.from("product_images").select("*").eq("product_id", productId).order("sort_order"),
     ]);
 
     return {
@@ -143,7 +143,7 @@ export const getProductBySlugData = createServerFn({ method: "GET" })
 
 export const getOffersData = createServerFn({ method: "GET" })
   .handler(async () => {
-    const { data: offers } = await supabaseAdmin
+    const { data: offers } = await supabase
       .from("offers")
       .select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order")
       .eq("active", true)
@@ -157,7 +157,7 @@ export const getOffersData = createServerFn({ method: "GET" })
 
     let productImages: Record<string, string> = {};
     if (slugs.length) {
-      const { data: products } = await supabaseAdmin.from("products").select("slug,hero_image_url").in("slug", slugs);
+      const { data: products } = await supabase.from("products").select("slug,hero_image_url").in("slug", slugs);
       (products as Array<{ slug: string; hero_image_url: string | null }> | null)?.forEach((p) => {
         if (p.hero_image_url) productImages[p.slug] = p.hero_image_url;
       });

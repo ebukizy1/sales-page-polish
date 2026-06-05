@@ -1,5 +1,5 @@
-import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-gDmSD4tF.mjs";
-import { c as createClient } from "../_libs/supabase__supabase-js.mjs";
+import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-DpR3w80_.mjs";
+import { s as supabase } from "./client-B568P1DA.mjs";
 import process$1 from "node:process";
 import "../_libs/seroval.mjs";
 import "../_libs/react.mjs";
@@ -21,6 +21,7 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
+import "../_libs/supabase__supabase-js.mjs";
 import "../_libs/supabase__postgrest-js.mjs";
 import "../_libs/supabase__realtime-js.mjs";
 import "../_libs/supabase__phoenix.mjs";
@@ -37,33 +38,6 @@ var createServerRpc = (serverFnMeta, splitImportFn) => {
     [TSS_SERVER_FUNCTION]: true
   });
 };
-function createSupabaseAdminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    const missing = [
-      ...!SUPABASE_URL ? ["SUPABASE_URL"] : [],
-      ...!SUPABASE_SERVICE_ROLE_KEY ? ["SUPABASE_SERVICE_ROLE_KEY"] : []
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
-  }
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: {
-      storage: void 0,
-      persistSession: false,
-      autoRefreshToken: false
-    }
-  });
-}
-let _supabaseAdmin;
-const supabaseAdmin = new Proxy({}, {
-  get(_, prop, receiver) {
-    if (!_supabaseAdmin) _supabaseAdmin = createSupabaseAdminClient();
-    return Reflect.get(_supabaseAdmin, prop, receiver);
-  }
-});
 function getServerConfig() {
   return {
     nodeEnv: process$1.env.NODE_ENV
@@ -148,7 +122,7 @@ const getLandingPageData = createServerFn({
   try {
     const {
       data: products
-    } = await supabaseAdmin.from("products").select("*").eq("active", true).order("featured", {
+    } = await supabase.from("products").select("*").eq("active", true).order("featured", {
       ascending: false
     }).limit(1);
     const product = products?.[0] ?? null;
@@ -156,7 +130,7 @@ const getLandingPageData = createServerFn({
       product: null
     };
     const productId = product.id;
-    const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([supabaseAdmin.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_features").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), supabaseAdmin.from("site_settings").select("*").eq("id", 1).maybeSingle(), supabaseAdmin.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
+    const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([supabase.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_features").select("*").eq("product_id", productId).order("sort_order"), supabase.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(), supabase.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
     return {
       product,
       specs: specsRes.data ?? [],
@@ -192,10 +166,10 @@ const getProductBySlugData = createServerFn({
   } = data;
   const {
     data: product
-  } = await supabaseAdmin.from("products").select("*").eq("slug", slug).maybeSingle();
+  } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
   if (!product) return null;
   const productId = product.id;
-  const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([supabaseAdmin.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_features").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), supabaseAdmin.from("site_settings").select("*").eq("id", 1).maybeSingle(), supabaseAdmin.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), supabaseAdmin.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
+  const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([supabase.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_features").select("*").eq("product_id", productId).order("sort_order"), supabase.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(), supabase.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
   return {
     product,
     specs: specsRes.data ?? [],
@@ -217,7 +191,7 @@ const getOffersData = createServerFn({
 }).handler(getOffersData_createServerFn_handler, async () => {
   const {
     data: offers
-  } = await supabaseAdmin.from("offers").select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order").eq("active", true).order("sort_order", {
+  } = await supabase.from("offers").select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order").eq("active", true).order("sort_order", {
     ascending: true
   });
   const nextOffers = offers ?? [];
@@ -226,7 +200,7 @@ const getOffersData = createServerFn({
   if (slugs.length) {
     const {
       data: products
-    } = await supabaseAdmin.from("products").select("slug,hero_image_url").in("slug", slugs);
+    } = await supabase.from("products").select("slug,hero_image_url").in("slug", slugs);
     products?.forEach((p) => {
       if (p.hero_image_url) productImages[p.slug] = p.hero_image_url;
     });

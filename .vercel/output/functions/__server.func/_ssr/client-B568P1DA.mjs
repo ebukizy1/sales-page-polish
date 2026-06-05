@@ -17,8 +17,6 @@ const supabase = new Proxy({}, {
     return Reflect.get(_supabase, prop, receiver);
   }
 });
-const db = supabase;
 export {
-  db as d,
   supabase as s
 };

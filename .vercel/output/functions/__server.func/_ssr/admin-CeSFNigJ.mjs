@@ -1,6 +1,7 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
-import { s as supabase, d as db } from "./cms-types-B7Rjfl77.mjs";
+import { s as supabase } from "./client-B568P1DA.mjs";
+import { d as db } from "./cms-types-BxiKuzEW.mjs";
 import "../_libs/tanstack__router-core.mjs";
 import "../_libs/tanstack__history.mjs";
 import "../_libs/cookie-es.mjs";
