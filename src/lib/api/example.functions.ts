@@ -20,3 +20,41 @@ export const getGreeting = createServerFn({ method: "POST" })
       mode: config.nodeEnv ?? "unknown",
     };
   });
+
+export const notifyNewOrder = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      to: z.string().email().optional(),
+      subject: z.string().min(1),
+      text: z.string().min(1),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const host = process.env.SMTP_HOST;
+    const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+    const from = process.env.SMTP_FROM || user;
+    const to = data.to || process.env.ORDER_NOTIFY_EMAIL_TO || undefined;
+
+    if (!host || !port || !user || !pass || !from || !to) {
+      return { sent: false };
+    }
+
+    const nodemailer = await import("nodemailer");
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+
+    await transporter.sendMail({
+      from,
+      to,
+      subject: data.subject,
+      text: data.text,
+    });
+
+    return { sent: true };
+  });

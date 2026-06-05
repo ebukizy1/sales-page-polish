@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { db, type Product, type Spec, type Feature, type GalleryImage, type Package, type SiteSettings, type Offer } from "@/lib/cms-types";
+import { db, type Product, type Spec, type Feature, type GalleryImage, type Package, type SiteSettings, type Offer, type Review, type FAQ } from "@/lib/cms-types";
 import type { Session } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/admin")({
@@ -218,16 +218,25 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
   const [features, setFeatures] = useState<Feature[]>([]);
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [saving, setSaving] = useState(false);
 
   const loadAll = useCallback(async () => {
-    const [s, f, g, k] = await Promise.all([
+    const [s, f, g, k, r, aq] = await Promise.all([
       db.from("product_specifications").select("*").eq("product_id", p.id).order("sort_order"),
       db.from("product_features").select("*").eq("product_id", p.id).order("sort_order"),
       db.from("product_images").select("*").eq("product_id", p.id).order("sort_order"),
       db.from("packages").select("*").eq("product_id", p.id).order("sort_order"),
+      db.from("product_reviews").select("*").eq("product_id", p.id).order("sort_order"),
+      db.from("product_faqs").select("*").eq("product_id", p.id).order("sort_order"),
     ]);
-    setSpecs(s.data ?? []); setFeatures(f.data ?? []); setGallery(g.data ?? []); setPackages(k.data ?? []);
+    setSpecs(s.data ?? []);
+    setFeatures(f.data ?? []);
+    setGallery(g.data ?? []);
+    setPackages(k.data ?? []);
+    setReviews(r.data ?? []);
+    setFaqs(aq.data ?? []);
   }, [p.id]);
   useEffect(() => { loadAll(); }, [loadAll]);
 
@@ -235,17 +244,137 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
 
   const save = async () => {
     setSaving(true);
-    const { error } = await db.from("products").update({
-      slug: p.slug, title: p.title, short_description: p.short_description, long_description: p.long_description,
+    const unknownColumnRe = /Could not find the '([^']+)' column of 'products' in the schema cache/;
+
+    const updateProductWithRetry = async (patch: Record<string, unknown>) => {
+      const skipped: string[] = [];
+      let nextPatch: Record<string, unknown> = { ...patch };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let lastError: any = null;
+
+      for (let attempt = 0; attempt < 30; attempt++) {
+        const { error } = await db.from("products").update(nextPatch).eq("id", p.id);
+        if (!error) return { skipped, error: null };
+
+        lastError = error;
+        const match = unknownColumnRe.exec(String(error.message ?? ""));
+        if (!match) return { skipped, error };
+
+        const col = match[1];
+        if (!(col in nextPatch)) return { skipped, error };
+        delete nextPatch[col];
+        skipped.push(col);
+
+        if (Object.keys(nextPatch).length === 0) return { skipped, error };
+      }
+
+      return { skipped, error: lastError };
+    };
+
+    const basicPatch = {
+      slug: p.slug,
+      title: p.title,
+      short_description: p.short_description,
+      long_description: p.long_description,
       hero_image_url: p.hero_image_url,
+      video_url: p.video_url,
+      warranty_text: p.warranty_text,
+      delivery_text: p.delivery_text,
+      active: p.active,
+      featured: p.featured,
+    };
+
+    const basicRes = await updateProductWithRetry(basicPatch);
+    if (basicRes.error) {
+      setSaving(false);
+      alert(basicRes.error.message);
+      return;
+    }
+
+    const dynamicPatch = {
+      tagline: p.tagline,
+      hero_headline: p.hero_headline,
+      hero_subheadline: p.hero_subheadline,
+      hero_description: p.hero_description,
+      hero_cta_text: p.hero_cta_text,
+      hero_cta_link: p.hero_cta_link,
+      price: p.price ? Number(p.price) : null,
+      discount_price: p.discount_price ? Number(p.discount_price) : null,
+      stock_status: p.stock_status,
+      features_section_title: p.features_section_title,
+      features_section_subtitle: p.features_section_subtitle,
+      bills_section_title: p.bills_section_title,
+      bills_section_description: p.bills_section_description,
+      bills_section_list: p.bills_section_list,
+      security_section_title: p.security_section_title,
+      security_section_description: p.security_section_description,
+      security_media_type: p.security_media_type,
+      specs_section_title: p.specs_section_title,
+      specs_section_subtitle: p.specs_section_subtitle,
       packaging_image_url: p.packaging_image_url,
       night_image_url: p.night_image_url,
       specs_image_url: p.specs_image_url,
-      video_url: p.video_url, warranty_text: p.warranty_text,
-      delivery_text: p.delivery_text, active: p.active, featured: p.featured,
-    }).eq("id", p.id);
+      final_cta_headline: p.final_cta_headline,
+      final_cta_subheadline: p.final_cta_subheadline,
+      final_cta_button_text: p.final_cta_button_text,
+      final_cta_button_link: p.final_cta_button_link,
+      final_cta_bg_image_url: p.final_cta_bg_image_url,
+    };
+
+    const dynamicRes = await updateProductWithRetry(dynamicPatch);
     setSaving(false);
-    if (error) alert(error.message); else alert("Saved");
+
+    if (dynamicRes.error) {
+      const skipped = [...basicRes.skipped, ...dynamicRes.skipped];
+      const skippedText = skipped.length ? ` Skipped: ${skipped.join(", ")}.` : "";
+      alert(`Saved basic product fields, but some sales-page section fields could not be saved: ${dynamicRes.error.message}.${skippedText}`);
+      return;
+    }
+
+    const skipped = [...basicRes.skipped, ...dynamicRes.skipped];
+    if (skipped.length) {
+      alert(`Saved. Some fields were skipped because your database is missing columns: ${skipped.join(", ")}`);
+      return;
+    }
+
+    const offerUnknownColumnRe = /Could not find the '([^']+)' column of 'offers' in the schema cache/;
+    const offerPayload = {
+      title: p.title,
+      description: p.short_description,
+      price: packages?.[0]?.price ?? (p.price ? Number(p.price) : 0),
+      original_price: p.discount_price ? Number(p.discount_price) : null,
+      badge: "Offer",
+      image_url: p.hero_image_url,
+      product_slug: p.slug,
+      active: true,
+    };
+
+    const { data: existingOffer, error: findOfferError } = await db
+      .from("offers")
+      .select("id")
+      .eq("product_slug", p.slug)
+      .maybeSingle();
+
+    if (findOfferError) {
+      const m = offerUnknownColumnRe.exec(String(findOfferError.message ?? ""));
+      if (!m) alert(`Saved product, but could not sync offer card: ${findOfferError.message}`);
+    } else {
+      if (existingOffer?.id) {
+        const { error: offerUpdateError } = await db.from("offers").update(offerPayload).eq("id", existingOffer.id);
+        if (offerUpdateError) {
+          const m = offerUnknownColumnRe.exec(String(offerUpdateError.message ?? ""));
+          if (!m) alert(`Saved product, but could not sync offer card: ${offerUpdateError.message}`);
+        }
+      } else {
+        const { error: offerInsertError } = await db.from("offers").insert({ ...offerPayload, sort_order: 9999 });
+        if (offerInsertError) {
+          const m = offerUnknownColumnRe.exec(String(offerInsertError.message ?? ""));
+          if (!m) alert(`Saved product, but could not create offer card: ${offerInsertError.message}`);
+        }
+      }
+    }
+
+    alert("Saved");
   };
 
   const remove = async () => {
@@ -255,7 +384,7 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
   };
 
   const uploadTo = async (
-    slot: "hero_image_url" | "packaging_image_url" | "night_image_url" | "specs_image_url",
+    slot: "hero_image_url" | "packaging_image_url" | "night_image_url" | "specs_image_url" | "final_cta_bg_image_url",
     file: File,
   ) => {
     const path = `${p.id}/${slot}-${Date.now()}-${file.name}`;
@@ -265,14 +394,24 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
     set(slot, data.publicUrl);
   };
 
+  const uploadSecurityVideo = async (file: File) => {
+    const path = `${p.id}/security-video-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("products").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) { alert(error.message); return; }
+    const { data } = supabase.storage.from("products").getPublicUrl(path);
+    set("video_url", data.publicUrl);
+    set("security_media_type", "video");
+  };
+
   const imageSlots: {
-    key: "hero_image_url" | "specs_image_url" | "packaging_image_url" | "night_image_url";
+    key: "hero_image_url" | "specs_image_url" | "packaging_image_url" | "night_image_url" | "final_cta_bg_image_url";
     label: string; hint: string;
   }[] = [
     { key: "hero_image_url",      label: "1. Hero / Product Image",      hint: "Main product shot — shown first in the hero gallery." },
     { key: "specs_image_url",     label: "2. Specifications Image",      hint: "Spec/diagram shot — shown beside the spec table." },
     { key: "packaging_image_url", label: "3. Packaging Image",           hint: "Box / unboxing shot — shown in the 'Zero Bills' section." },
-    { key: "night_image_url",     label: "4. Installed-At-Night Image",  hint: "Night / installed shot — shown in the dark 'Real Light' section." },
+    { key: "night_image_url",     label: "4. Installed-At-Night Image / Media", hint: "Night / installed shot — shown in the 'Real Light' section." },
+    { key: "final_cta_bg_image_url", label: "5. Final CTA Background Image", hint: "Background image for the final call-to-action section." },
   ];
 
   return (
@@ -294,10 +433,72 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
           <Field label="Warranty Text"><input className={inputCls} value={p.warranty_text ?? ""} onChange={(e) => set("warranty_text", e.target.value)} /></Field>
           <Field label="Delivery Text"><input className={inputCls} value={p.delivery_text ?? ""} onChange={(e) => set("delivery_text", e.target.value)} /></Field>
         </div>
-        <Field label="Video URL (optional)"><input className={inputCls} value={p.video_url ?? ""} onChange={(e) => set("video_url", e.target.value)} /></Field>
         <div className="flex gap-6">
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={p.active} onChange={(e) => set("active", e.target.checked)} /> Active</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={p.featured} onChange={(e) => set("featured", e.target.checked)} /> Featured</label>
+        </div>
+      </Section>
+
+      <Section title="SECTION 1: HERO SECTION COPY & PRICING">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Product Tagline"><input className={inputCls} value={p.tagline ?? ""} onChange={(e) => set("tagline", e.target.value)} placeholder="e.g. Pay On Delivery Nationwide" /></Field>
+          <Field label="Hero Headline"><input className={inputCls} value={p.hero_headline ?? ""} onChange={(e) => set("hero_headline", e.target.value)} placeholder="e.g. Light Your Whole Compound — Without NEPA." /></Field>
+        </div>
+        <Field label="Hero Subheadline"><input className={inputCls} value={p.hero_subheadline ?? ""} onChange={(e) => set("hero_subheadline", e.target.value)} placeholder="e.g. Die-cast aluminium · 25,000mAh · 5-Year Warranty" /></Field>
+        <Field label="Hero Description (Bullet points, one per line)"><textarea rows={4} className={inputCls} value={p.hero_description ?? ""} onChange={(e) => set("hero_description", e.target.value)} placeholder="Die-cast aluminium body&#10;25,000mAh lithium battery" /></Field>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Regular Price (Discount Price)"><input type="number" className={inputCls} value={p.discount_price ?? ""} onChange={(e) => set("discount_price", e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 50000" /></Field>
+          <Field label="Selling Price (Price)"><input type="number" className={inputCls} value={p.price ?? ""} onChange={(e) => set("price", e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 35000" /></Field>
+          <Field label="Stock Status"><input className={inputCls} value={p.stock_status ?? ""} onChange={(e) => set("stock_status", e.target.value)} placeholder="e.g. Only 14 units left at promo price" /></Field>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="CTA Button Text"><input className={inputCls} value={p.hero_cta_text ?? ""} onChange={(e) => set("hero_cta_text", e.target.value)} placeholder="e.g. Order Now" /></Field>
+          <Field label="CTA Button Link"><input className={inputCls} value={p.hero_cta_link ?? ""} onChange={(e) => set("hero_cta_link", e.target.value)} placeholder="e.g. #order" /></Field>
+        </div>
+      </Section>
+
+      <Section title="SECTION 2: WHY THIS MODEL SETTINGS">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Section Title"><input className={inputCls} value={p.features_section_title ?? ""} onChange={(e) => set("features_section_title", e.target.value)} placeholder="e.g. Why This Model Wins" /></Field>
+          <Field label="Section Subtitle"><input className={inputCls} value={p.features_section_subtitle ?? ""} onChange={(e) => set("features_section_subtitle", e.target.value)} placeholder="e.g. Built to fix every complaint..." /></Field>
+        </div>
+      </Section>
+
+      <Section title="SECTION 3: ZERO BILLS SECTION SETTINGS">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Section Title"><input className={inputCls} value={p.bills_section_title ?? ""} onChange={(e) => set("bills_section_title", e.target.value)} placeholder="e.g. One Light. Zero Bills. Zero Stress." /></Field>
+          <Field label="Section Description"><textarea rows={3} className={inputCls} value={p.bills_section_description ?? ""} onChange={(e) => set("bills_section_description", e.target.value)} placeholder="Section copy..." /></Field>
+        </div>
+        <Field label="Section List Items (one per line)"><textarea rows={4} className={inputCls} value={p.bills_section_list ?? ""} onChange={(e) => set("bills_section_list", e.target.value)} placeholder="Compounds, gates, streets, farms, car parks, churches&#10;Waterproof (IP67) — works through the heaviest rainy season" /></Field>
+      </Section>
+
+      <Section title="SECTION 4: REAL SECURITY SECTION SETTINGS">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Section Title"><input className={inputCls} value={p.security_section_title ?? ""} onChange={(e) => set("security_section_title", e.target.value)} placeholder="e.g. Real Light. Real Security." /></Field>
+          <Field label="Media Type"><select value={p.security_media_type ?? "image"} onChange={(e) => set("security_media_type", e.target.value)} className={inputCls}><option value="image">Show Image</option><option value="video">Show Video</option></select></Field>
+          <Field label="Video URL (Youtube Embed or MP4)"><input className={inputCls} value={p.video_url ?? ""} onChange={(e) => set("video_url", e.target.value)} placeholder="e.g. https://www.youtube.com/embed/..." /></Field>
+        </div>
+        <Field label="Upload Video (MP4)">
+          <input type="file" accept="video/mp4,video/*" onChange={(e) => e.target.files?.[0] && uploadSecurityVideo(e.target.files[0])} className="block w-full text-xs" />
+        </Field>
+        <Field label="Section Description"><textarea rows={3} className={inputCls} value={p.security_section_description ?? ""} onChange={(e) => set("security_section_description", e.target.value)} placeholder="Section copy..." /></Field>
+      </Section>
+
+      <Section title="SECTION 5: SPECIFICATIONS SECTION SETTINGS">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Section Title"><input className={inputCls} value={p.specs_section_title ?? ""} onChange={(e) => set("specs_section_title", e.target.value)} placeholder="e.g. Full Specifications" /></Field>
+          <Field label="Section Subtitle"><input className={inputCls} value={p.specs_section_subtitle ?? ""} onChange={(e) => set("specs_section_subtitle", e.target.value)} placeholder="e.g. The right parts. No shortcuts." /></Field>
+        </div>
+      </Section>
+
+      <Section title="SECTION 9: FINAL CTA SETTINGS">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="CTA Headline"><input className={inputCls} value={p.final_cta_headline ?? ""} onChange={(e) => set("final_cta_headline", e.target.value)} placeholder="e.g. GET YOURS TODAY — LIMITED STOCK" /></Field>
+          <Field label="CTA Subheadline"><input className={inputCls} value={p.final_cta_subheadline ?? ""} onChange={(e) => set("final_cta_subheadline", e.target.value)} placeholder="e.g. Over 380 units shipped..." /></Field>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Button Text"><input className={inputCls} value={p.final_cta_button_text ?? ""} onChange={(e) => set("final_cta_button_text", e.target.value)} placeholder="e.g. Claim This Offer" /></Field>
+          <Field label="Button Link"><input className={inputCls} value={p.final_cta_button_link ?? ""} onChange={(e) => set("final_cta_button_link", e.target.value)} placeholder="e.g. #order" /></Field>
         </div>
       </Section>
 
@@ -337,6 +538,8 @@ function ProductEditor({ product, onClose }: { product: Product; onClose: () => 
       <FeaturesSection productId={p.id} items={features} reload={loadAll} />
       <GallerySection productId={p.id} items={gallery} reload={loadAll} />
       <PackagesSection productId={p.id} items={packages} reload={loadAll} />
+      <ReviewsSection productId={p.id} items={reviews} reload={loadAll} />
+      <FaqsSection productId={p.id} items={faqs} reload={loadAll} />
     </div>
   );
 }
@@ -384,28 +587,41 @@ function FeaturesSection({ productId, items, reload }: { productId: string; item
 }
 
 function GallerySection({ productId, items, reload }: { productId: string; items: GalleryImage[]; reload: () => void }) {
-  const upload = async (file: File) => {
+  const upload = async (file: File, type: string) => {
     const path = `${productId}/gallery-${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("products").upload(path, file);
     if (error) { alert(error.message); return; }
     const { data } = supabase.storage.from("products").getPublicUrl(path);
-    await db.from("product_images").insert({ product_id: productId, url: data.publicUrl, sort_order: items.length });
+    await db.from("product_images").insert({ product_id: productId, url: data.publicUrl, sort_order: items.length, image_type: type });
     reload();
   };
   const del = async (id: string) => { await db.from("product_images").delete().eq("id", id); reload(); };
   const upd = async (id: string, patch: Partial<GalleryImage>) => { await db.from("product_images").update(patch).eq("id", id); reload(); };
   return (
     <Section title="Gallery" action={
-      <label className="cursor-pointer rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-        + Upload<input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
-      </label>
+      <div className="flex gap-2">
+        <label className="cursor-pointer rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
+          + Gallery Image<input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0], "gallery")} />
+        </label>
+        <label className="cursor-pointer rounded-lg bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
+          + Before/After<input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0], "before_after")} />
+        </label>
+        <label className="cursor-pointer rounded-lg bg-blue-600 px-3 py-1 text-xs font-bold text-white">
+          + Installation<input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0], "installation")} />
+        </label>
+      </div>
     }>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((g) => (
           <div key={g.id} className="overflow-hidden rounded-xl border border-border">
             <img src={g.url} alt={g.alt ?? ""} className="aspect-square w-full object-cover" />
-            <div className="space-y-2 p-2">
+            <div className="space-y-2 p-2 bg-background">
               <input defaultValue={g.alt ?? ""} onBlur={(e) => upd(g.id, { alt: e.target.value })} className={inputCls} placeholder="Alt text" />
+              <select value={g.image_type ?? "gallery"} onChange={(e) => upd(g.id, { image_type: e.target.value })} className={inputCls}>
+                <option value="gallery">Gallery Image</option>
+                <option value="before_after">Before / After Image</option>
+                <option value="installation">Installation Image</option>
+              </select>
               <div className="flex gap-2">
                 <input type="number" defaultValue={g.sort_order} onBlur={(e) => upd(g.id, { sort_order: Number(e.target.value) })} className={`${inputCls} w-20`} />
                 <button onClick={() => del(g.id)} className="flex-1 rounded-lg border border-destructive px-3 py-1 text-xs font-bold text-destructive">Delete</button>
@@ -442,9 +658,87 @@ function PackagesSection({ productId, items, reload }: { productId: string; item
   );
 }
 
+function ReviewsSection({ productId, items, reload }: { productId: string; items: Review[]; reload: () => void }) {
+  const add = async () => {
+    await db.from("product_reviews").insert({
+      product_id: productId,
+      customer_name: "Customer Name",
+      customer_location: "Lagos",
+      rating: 5,
+      review_text: "Great product...",
+      sort_order: items.length,
+    });
+    reload();
+  };
+  const upd = async (id: string, patch: Partial<Review>) => {
+    await db.from("product_reviews").update(patch).eq("id", id);
+    reload();
+  };
+  const del = async (id: string) => {
+    await db.from("product_reviews").delete().eq("id", id);
+    reload();
+  };
+  const uploadPhoto = async (id: string, file: File) => {
+    const path = `${productId}/review-${id}-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("products").upload(path, file, { upsert: true });
+    if (error) { alert(error.message); return; }
+    const { data } = supabase.storage.from("products").getPublicUrl(path);
+    await upd(id, { customer_photo_url: data.publicUrl });
+  };
+  return (
+    <Section title="Reviews" action={<button onClick={add} className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">+ Add</button>}>
+      <div className="space-y-4">
+        {items.map((r) => (
+          <div key={r.id} className="rounded-xl border border-border p-4 bg-background space-y-3">
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Field label="Name"><input defaultValue={r.customer_name} onBlur={(e) => upd(r.id, { customer_name: e.target.value })} className={inputCls} /></Field>
+              <Field label="Location"><input defaultValue={r.customer_location ?? ""} onBlur={(e) => upd(r.id, { customer_location: e.target.value })} className={inputCls} /></Field>
+              <Field label="Rating"><input type="number" min={1} max={5} defaultValue={r.rating} onBlur={(e) => upd(r.id, { rating: Number(e.target.value) })} className={inputCls} /></Field>
+            </div>
+            <Field label="Review Text"><textarea defaultValue={r.review_text} onBlur={(e) => upd(r.id, { review_text: e.target.value })} className={inputCls} rows={2} /></Field>
+            <div className="flex flex-wrap items-center gap-3">
+              {r.customer_photo_url && <img src={r.customer_photo_url} alt="" className="h-10 w-10 rounded-full object-cover" />}
+              <label className="cursor-pointer rounded-lg border border-border px-3 py-1 text-xs font-bold bg-secondary hover:bg-secondary/80">
+                Upload Photo<input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPhoto(r.id, e.target.files[0])} />
+              </label>
+              <input defaultValue={r.customer_photo_url ?? ""} onBlur={(e) => upd(r.id, { customer_photo_url: e.target.value })} className={`${inputCls} flex-1`} placeholder="or paste image URL" />
+              <input type="number" defaultValue={r.sort_order} onBlur={(e) => upd(r.id, { sort_order: Number(e.target.value) })} className={`${inputCls} w-20`} placeholder="Order" />
+              <button onClick={() => del(r.id)} className="rounded-lg border border-destructive px-3 py-1 text-xs font-bold text-destructive">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function FaqsSection({ productId, items, reload }: { productId: string; items: FAQ[]; reload: () => void }) {
+  const add = async () => { await db.from("product_faqs").insert({ product_id: productId, question: "Question?", answer: "Answer...", sort_order: items.length }); reload(); };
+  const upd = async (id: string, patch: Partial<FAQ>) => { await db.from("product_faqs").update(patch).eq("id", id); reload(); };
+  const del = async (id: string) => { await db.from("product_faqs").delete().eq("id", id); reload(); };
+  return (
+    <Section title="FAQs" action={<button onClick={add} className="rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">+ Add</button>}>
+      <div className="space-y-4">
+        {items.map((f) => (
+          <div key={f.id} className="rounded-xl border border-border p-4 bg-background space-y-3">
+            <Field label="Question"><input defaultValue={f.question} onBlur={(e) => upd(f.id, { question: e.target.value })} className={inputCls} /></Field>
+            <Field label="Answer"><textarea defaultValue={f.answer} onBlur={(e) => upd(f.id, { answer: e.target.value })} className={inputCls} rows={2} /></Field>
+            <div className="flex items-center gap-2 justify-end">
+              <span className="text-xs text-muted-foreground">Order:</span>
+              <input type="number" defaultValue={f.sort_order} onBlur={(e) => upd(f.id, { sort_order: Number(e.target.value) })} className={`${inputCls} w-20`} />
+              <button onClick={() => del(f.id)} className="rounded-lg border border-destructive px-3 py-1 text-xs font-bold text-destructive">Del</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
 /* =================== OFFERS =================== */
 function OffersTab() {
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [products, setProducts] = useState<Array<{ slug: string; title: string }>>([]);
   const [loading, setLoading] = useState(true);
   const load = useCallback(async () => {
     setLoading(true);
@@ -453,11 +747,22 @@ function OffersTab() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    (async () => {
+      const { data } = await db.from("products").select("slug,title").order("created_at", { ascending: false }).limit(500);
+      setProducts((data as Array<{ slug: string; title: string }>) ?? []);
+    })();
+  }, []);
+
   const add = async () => {
     await db.from("offers").insert({ title: "New Offer", price: 0, sort_order: offers.length, active: true });
     load();
   };
-  const upd = async (id: string, patch: Partial<Offer>) => { await db.from("offers").update(patch).eq("id", id); load(); };
+  const upd = async (id: string, patch: Partial<Offer>) => {
+    const { error } = await db.from("offers").update(patch).eq("id", id);
+    if (error) alert(error.message);
+    load();
+  };
   const del = async (id: string) => { if (confirm("Delete offer?")) { await db.from("offers").delete().eq("id", id); load(); } };
 
   const uploadImage = async (id: string, file: File) => {
@@ -485,12 +790,29 @@ function OffersTab() {
               <Field label="Price ₦"><input type="number" defaultValue={o.price} onBlur={(e) => upd(o.id, { price: Number(e.target.value) })} className={inputCls} /></Field>
               <Field label="Original Price ₦"><input type="number" defaultValue={o.original_price ?? 0} onBlur={(e) => upd(o.id, { original_price: Number(e.target.value) || null })} className={inputCls} /></Field>
               <Field label="Sort Order"><input type="number" defaultValue={o.sort_order} onBlur={(e) => upd(o.id, { sort_order: Number(e.target.value) })} className={inputCls} /></Field>
+              <Field label="Sales Page Product">
+                <select
+                  defaultValue={o.product_slug ?? ""}
+                  onChange={(e) => upd(o.id, { product_slug: e.target.value || null })}
+                  className={inputCls}
+                >
+                  <option value="">(No sales page)</option>
+                  {products.map((p) => (
+                    <option key={p.slug} value={p.slug}>{p.title} (/{p.slug})</option>
+                  ))}
+                </select>
+              </Field>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               {o.image_url && <img src={o.image_url} alt="" className="h-16 w-16 rounded-lg object-cover" />}
               <label className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-xs font-bold">
                 Upload Image<input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(o.id, e.target.files[0])} />
               </label>
+              {o.product_slug && (
+                <a href={`/product/${o.product_slug}#order`} target="_blank" rel="noreferrer" className="text-xs font-bold underline">
+                  Open Sales Page
+                </a>
+              )}
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked={o.active} onChange={(e) => upd(o.id, { active: e.target.checked })} /> Active</label>
               <button onClick={() => del(o.id)} className="ml-auto rounded-lg border border-destructive px-3 py-1.5 text-xs font-bold text-destructive">Delete</button>
             </div>

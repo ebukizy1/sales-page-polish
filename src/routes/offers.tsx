@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/cms-types";
 import { Tag, ArrowRight, Gift } from "lucide-react";
 
 export const Route = createFileRoute("/offers")({
@@ -21,23 +21,43 @@ type Offer = {
   original_price: number | null;
   badge: string | null;
   image_url: string | null;
+  product_slug: string | null;
   sort_order: number;
 };
 
 function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [productImages, setProductImages] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("offers")
-      .select("id, title, description, price, original_price, badge, image_url, sort_order")
-      .eq("active", true)
-      .order("sort_order", { ascending: true })
-      .then(({ data }) => {
-        setOffers((data as Offer[]) ?? []);
-        setLoading(false);
-      });
+    (async () => {
+      const { data } = await db
+        .from("offers")
+        .select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order")
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
+
+      const nextOffers = (data as Offer[] | null) ?? [];
+      setOffers(nextOffers);
+
+      const slugs = Array.from(
+        new Set(nextOffers.map((o) => o.product_slug).filter((x): x is string => !!x)),
+      );
+
+      if (slugs.length) {
+        const { data: products } = await db.from("products").select("slug,hero_image_url").in("slug", slugs);
+        const map: Record<string, string> = {};
+        (products as Array<{ slug: string; hero_image_url: string | null }> | null)?.forEach((p) => {
+          if (p.hero_image_url) map[p.slug] = p.hero_image_url;
+        });
+        setProductImages(map);
+      } else {
+        setProductImages({});
+      }
+
+      setLoading(false);
+    })();
   }, []);
 
   return (
@@ -67,12 +87,16 @@ function OffersPage() {
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
           {offers.map((o) => {
             const savings = o.original_price && o.original_price > o.price ? o.original_price - o.price : 0;
+            const cardImage = o.image_url || (o.product_slug ? productImages[o.product_slug] : undefined);
             return (
               <div key={o.id} className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition hover:-translate-y-1 hover:shadow-2xl">
                 {o.badge && (
                   <div className="bg-primary px-5 py-2 text-xs font-extrabold uppercase tracking-wider text-primary-foreground">
                     {o.badge}
                   </div>
+                )}
+                {cardImage && (
+                  <img src={cardImage} alt={o.title} className="aspect-[16/9] w-full object-cover" />
                 )}
                 <div className="flex flex-1 flex-col p-6 sm:p-8">
                   <div className="flex items-start gap-3">
@@ -95,13 +119,24 @@ function OffersPage() {
                     <p className="mt-1 text-xs font-bold text-destructive">You save ₦{savings.toLocaleString()}</p>
                   )}
 
-                  <Link
-                    to="/"
-                    hash="order"
-                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5"
-                  >
-                    Order This Bundle <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  {o.product_slug ? (
+                    <Link
+                      to="/product/$slug"
+                      params={{ slug: o.product_slug }}
+                      hash="order"
+                      className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5"
+                    >
+                      View Offer <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/"
+                      hash="order"
+                      className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5"
+                    >
+                      Order This Bundle <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )}
                 </div>
               </div>
             );

@@ -21,11 +21,41 @@ export type Product = {
   active: boolean;
   featured: boolean;
   created_at: string;
+  
+  // Dynamic Funnel Hero fields
+  tagline: string | null;
+  hero_headline: string | null;
+  hero_subheadline: string | null;
+  hero_description: string | null;
+  hero_cta_text: string | null;
+  hero_cta_link: string | null;
+  price: number | null;
+  discount_price: number | null;
+  stock_status: string | null;
+
+  // Dynamic Funnel Section fields
+  features_section_title: string | null;
+  features_section_subtitle: string | null;
+  bills_section_title: string | null;
+  bills_section_description: string | null;
+  bills_section_list: string | null;
+  security_section_title: string | null;
+  security_section_description: string | null;
+  security_media_type: string | null;
+  specs_section_title: string | null;
+  specs_section_subtitle: string | null;
+
+  // Dynamic Funnel Final CTA fields
+  final_cta_headline: string | null;
+  final_cta_subheadline: string | null;
+  final_cta_button_text: string | null;
+  final_cta_button_link: string | null;
+  final_cta_bg_image_url: string | null;
 };
 
 export type Spec = { id: string; product_id: string; label: string; value: string; sort_order: number };
 export type Feature = { id: string; product_id: string; title: string; description: string | null; icon: string | null; sort_order: number };
-export type GalleryImage = { id: string; product_id: string; url: string; alt: string | null; sort_order: number };
+export type GalleryImage = { id: string; product_id: string; url: string; alt: string | null; sort_order: number; image_type: string | null };
 export type Package = {
   id: string;
   product_id: string | null;
@@ -57,6 +87,28 @@ export type Offer = {
   original_price: number | null;
   badge: string | null;
   image_url: string | null;
+  product_slug: string | null;
   sort_order: number;
   active: boolean;
+};
+
+export type Review = {
+  id: string;
+  product_id: string;
+  customer_name: string;
+  customer_location: string | null;
+  customer_photo_url: string | null;
+  rating: number;
+  review_text: string;
+  sort_order: number;
+  created_at: string;
+};
+
+export type FAQ = {
+  id: string;
+  product_id: string;
+  question: string;
+  answer: string;
+  sort_order: number;
+  created_at: string;
 };
