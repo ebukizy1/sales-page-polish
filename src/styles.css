@@ -142,3 +142,35 @@
     color: var(--color-foreground);
   }
 }
+
+/* ===== Lit CTA — green "calling" pulsing button ===== */
+@keyframes lit-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.72 0.19 145 / 0.55), 0 10px 25px -8px oklch(0.55 0.2 145 / 0.55); }
+  50%      { box-shadow: 0 0 0 14px oklch(0.72 0.19 145 / 0), 0 14px 32px -8px oklch(0.55 0.2 145 / 0.65); }
+}
+@keyframes lit-shine {
+  0%   { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(220%) skewX(-20deg); }
+}
+.lit-cta {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(135deg, oklch(0.74 0.19 152) 0%, oklch(0.62 0.21 148) 50%, oklch(0.52 0.2 152) 100%);
+  border: 1px solid oklch(0.82 0.18 150 / 0.5);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+  animation: lit-pulse 1.8s ease-in-out infinite;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  cursor: pointer;
+}
+.lit-cta::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: lit-shine 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+.lit-cta:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.lit-cta:active { transform: translateY(0); filter: brightness(0.95); }
