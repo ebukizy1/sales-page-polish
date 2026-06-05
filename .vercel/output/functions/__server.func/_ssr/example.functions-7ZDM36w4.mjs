@@ -1,4 +1,4 @@
-import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-CbO9gT64.mjs";
+import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-Cp81I7r4.mjs";
 import { c as createClient } from "../_libs/supabase__supabase-js.mjs";
 import process$1 from "node:process";
 import "../_libs/seroval.mjs";
@@ -38,7 +38,7 @@ var createServerRpc = (serverFnMeta, splitImportFn) => {
   });
 };
 function createSupabaseAdminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     const missing = [

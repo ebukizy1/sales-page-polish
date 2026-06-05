@@ -1,8 +1,9 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
-import { a as getLandingPageData } from "./example.functions-TOUht9u8.mjs";
-import { P as ProductSalesFunnel } from "./ProductSalesFunnel-BWIDtIQD.mjs";
+import { b as getProductBySlugData } from "./example.functions-CLhR0udg.mjs";
+import { P as ProductSalesFunnel } from "./ProductSalesFunnel-oy3m_RiL.mjs";
+import { R as Route } from "./router-CINzHsyZ.mjs";
 import "../_libs/seroval.mjs";
-import "./server-CbO9gT64.mjs";
+import "./server-Cp81I7r4.mjs";
 import "node:async_hooks";
 import "../_libs/h3-v2.mjs";
 import "../_libs/rou3.mjs";
@@ -32,43 +33,50 @@ import "../_libs/supabase__auth-js.mjs";
 import "tslib";
 import "../_libs/supabase__functions-js.mjs";
 import "../_libs/lucide-react.mjs";
-function Index() {
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+function ProductSlugPage() {
+  const {
+    slug
+  } = Route.useParams();
   const [data, setData] = reactExports.useState(null);
+  const [error, setError] = reactExports.useState(null);
   const [loading, setLoading] = reactExports.useState(true);
   reactExports.useEffect(() => {
     (async () => {
       try {
-        const res = await getLandingPageData();
+        const res = await getProductBySlugData({
+          data: {
+            slug
+          }
+        });
+        if (!res) {
+          setError(`Product not found with slug: ${slug}`);
+          return;
+        }
         setData(res);
       } catch (err) {
-        console.error("Failed to load landing page data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load product.");
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [slug]);
   if (loading) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center bg-slate-950 text-slate-400 font-bold uppercase tracking-wider", children: "Loading…" });
   }
-  if (!data || !data.product) {
+  if (error) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center bg-slate-950 p-6 text-center text-slate-200", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-2xl font-black uppercase tracking-wider text-emerald-400", children: "No active product configured" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-slate-400", children: "Add a product from the admin dashboard to initialize the funnel." }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "/admin", className: "inline-block rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 px-6 py-3 font-black text-slate-950 hover:brightness-110 shadow-lg", children: "Go to Admin →" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-2xl font-black uppercase tracking-wider text-rose-500", children: "Error" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-slate-400", children: error }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "/", className: "inline-block rounded-xl bg-slate-900 border border-slate-800 px-6 py-3 font-bold text-slate-300 hover:bg-slate-800", children: "Go Home" })
     ] }) });
   }
-  const {
-    product,
-    specs,
-    features,
-    packages,
-    settings,
-    reviews,
-    faqs,
-    images
-  } = data;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ProductSalesFunnel, { product, specs, features, packages, settings, reviews, faqs, images });
+  if (!data) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center bg-slate-950 text-slate-400 font-bold uppercase tracking-wider", children: "Loading…" });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ProductSalesFunnel, { product: data.product, specs: data.specs, features: data.features, packages: data.packages, settings: data.settings, reviews: data.reviews, faqs: data.faqs, images: data.images });
 }
 export {
-  Index as component
+  ProductSlugPage as component
 };

@@ -145,7 +145,7 @@ function RootComponent() {
   }, [href]);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}) });
 }
-const $$splitComponentImporter$3 = () => import("./offers-BzrzM0Xi.mjs");
+const $$splitComponentImporter$3 = () => import("./offers-D8eNXLC6.mjs");
 const Route$3 = createFileRoute("/offers")({
   head: () => ({
     meta: [{
@@ -169,7 +169,7 @@ const Route$2 = createFileRoute("/admin")({
   }),
   component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-const $$splitComponentImporter$1 = () => import("./index-L436qYqA.mjs");
+const $$splitComponentImporter$1 = () => import("./index-CC0I3qJW.mjs");
 const Route$1 = createFileRoute("/")({
   head: () => ({
     meta: [{
@@ -181,7 +181,7 @@ const Route$1 = createFileRoute("/")({
   }),
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-const $$splitComponentImporter = () => import("./product._slug-IB7nbQDx.mjs");
+const $$splitComponentImporter = () => import("./product._slug-BP9hdNIU.mjs");
 const Route = createFileRoute("/product/$slug")({
   head: ({
     params
