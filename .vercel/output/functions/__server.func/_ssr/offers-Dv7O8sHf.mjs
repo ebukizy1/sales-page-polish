@@ -1,6 +1,6 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
-import { g as getOffersData } from "./example.functions-BTyYp2qX.mjs";
+import { g as getOffersData } from "./example.functions-DyY6oR_6.mjs";
 import "../_libs/seroval.mjs";
 import { G as Gift, T as Tag, A as ArrowRight } from "../_libs/lucide-react.mjs";
 import "../_libs/tanstack__router-core.mjs";
@@ -15,7 +15,7 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "./server-DpR3w80_.mjs";
+import "./server-BBizeIyi.mjs";
 import "node:async_hooks";
 import "../_libs/h3-v2.mjs";
 import "../_libs/rou3.mjs";

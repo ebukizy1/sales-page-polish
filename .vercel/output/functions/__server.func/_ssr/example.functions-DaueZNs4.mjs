@@ -1,5 +1,6 @@
-import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-DpR3w80_.mjs";
+import { T as TSS_SERVER_FUNCTION, b as createServerFn } from "./server-BBizeIyi.mjs";
 import { s as supabase } from "./client-B568P1DA.mjs";
+import { c as createClient } from "../_libs/supabase__supabase-js.mjs";
 import process$1 from "node:process";
 import "../_libs/seroval.mjs";
 import "../_libs/react.mjs";
@@ -21,7 +22,6 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "../_libs/supabase__supabase-js.mjs";
 import "../_libs/supabase__postgrest-js.mjs";
 import "../_libs/supabase__realtime-js.mjs";
 import "../_libs/supabase__phoenix.mjs";
@@ -45,6 +45,19 @@ function getServerConfig() {
     //   databaseUrl: process.env.DATABASE_URL,
     //   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
   };
+}
+function getDbClient() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  if (serviceKey && url) {
+    return createClient(url, serviceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    });
+  }
+  return supabase;
 }
 const getGreeting_createServerFn_handler = createServerRpc({
   id: "a8ea96f55c98d9dfe39eba1f21271c6c33bfa924611fe9d828fca0774e41b939",
@@ -120,17 +133,20 @@ const getLandingPageData = createServerFn({
   method: "GET"
 }).handler(getLandingPageData_createServerFn_handler, async () => {
   try {
+    const client = getDbClient();
     const {
-      data: products
-    } = await supabase.from("products").select("*").eq("active", true).order("featured", {
+      data: products,
+      error: pErr
+    } = await client.from("products").select("*").eq("active", true).order("featured", {
       ascending: false
     }).limit(1);
+    if (pErr) throw pErr;
     const product = products?.[0] ?? null;
     if (!product) return {
       product: null
     };
     const productId = product.id;
-    const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([supabase.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_features").select("*").eq("product_id", productId).order("sort_order"), supabase.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(), supabase.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
+    const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([client.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), client.from("product_features").select("*").eq("product_id", productId).order("sort_order"), client.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), client.from("site_settings").select("*").eq("id", 1).maybeSingle(), client.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), client.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), client.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
     return {
       product,
       specs: specsRes.data ?? [],
@@ -164,12 +180,13 @@ const getProductBySlugData = createServerFn({
   const {
     slug
   } = data;
+  const client = getDbClient();
   const {
     data: product
-  } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
+  } = await client.from("products").select("*").eq("slug", slug).maybeSingle();
   if (!product) return null;
   const productId = product.id;
-  const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([supabase.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_features").select("*").eq("product_id", productId).order("sort_order"), supabase.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(), supabase.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), supabase.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
+  const [specsRes, featRes, pkgRes, setRes, revRes, faqRes, imgRes] = await Promise.all([client.from("product_specifications").select("*").eq("product_id", productId).order("sort_order"), client.from("product_features").select("*").eq("product_id", productId).order("sort_order"), client.from("packages").select("*").eq("product_id", productId).eq("active", true).order("sort_order"), client.from("site_settings").select("*").eq("id", 1).maybeSingle(), client.from("product_reviews").select("*").eq("product_id", productId).order("sort_order"), client.from("product_faqs").select("*").eq("product_id", productId).order("sort_order"), client.from("product_images").select("*").eq("product_id", productId).order("sort_order")]);
   return {
     product,
     specs: specsRes.data ?? [],
@@ -189,9 +206,10 @@ const getOffersData_createServerFn_handler = createServerRpc({
 const getOffersData = createServerFn({
   method: "GET"
 }).handler(getOffersData_createServerFn_handler, async () => {
+  const client = getDbClient();
   const {
     data: offers
-  } = await supabase.from("offers").select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order").eq("active", true).order("sort_order", {
+  } = await client.from("offers").select("id, title, description, price, original_price, badge, image_url, product_slug, sort_order").eq("active", true).order("sort_order", {
     ascending: true
   });
   const nextOffers = offers ?? [];
@@ -200,7 +218,7 @@ const getOffersData = createServerFn({
   if (slugs.length) {
     const {
       data: products
-    } = await supabase.from("products").select("slug,hero_image_url").in("slug", slugs);
+    } = await client.from("products").select("slug,hero_image_url").in("slug", slugs);
     products?.forEach((p) => {
       if (p.hero_image_url) productImages[p.slug] = p.hero_image_url;
     });
