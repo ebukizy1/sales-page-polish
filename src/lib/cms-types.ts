@@ -12,6 +12,9 @@ export type Product = {
   short_description: string | null;
   long_description: string | null;
   hero_image_url: string | null;
+  packaging_image_url: string | null;
+  night_image_url: string | null;
+  specs_image_url: string | null;
   video_url: string | null;
   warranty_text: string | null;
   delivery_text: string | null;
