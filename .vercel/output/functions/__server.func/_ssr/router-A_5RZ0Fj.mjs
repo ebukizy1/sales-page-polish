@@ -32,8 +32,6 @@ function reportLovableError(error, context = {}) {
     }
   );
 }
-const envPixelId = "1320732783490764";
-const META_PIXEL_ID = envPixelId;
 function NotFoundComponent() {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center bg-background px-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-md text-center", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-7xl font-bold text-foreground", children: "404" }),
@@ -82,50 +80,29 @@ function ErrorComponent({ error, reset }) {
   ] }) });
 }
 const Route$4 = createRootRouteWithContext()({
-  head: () => {
-    const baseHead = {
-      meta: [
-        { charSet: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
-        { title: "Lovable App" },
-        { name: "description", content: "Lovable Generated Project" },
-        { name: "author", content: "Lovable" },
-        { property: "og:title", content: "Lovable App" },
-        { property: "og:description", content: "Lovable Generated Project" },
-        { property: "og:type", content: "website" },
-        { name: "twitter:card", content: "summary" },
-        { name: "twitter:site", content: "@Lovable" }
-      ],
-      links: [
-        { rel: "stylesheet", href: appCss },
-        { rel: "preconnect", href: "https://fonts.googleapis.com" },
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap"
-        }
-      ]
-    };
-    return {
-      ...baseHead,
-      scripts: [
-        {
-          type: "text/javascript",
-          children: `
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '${META_PIXEL_ID}');
-  fbq('track', 'PageView');
-`
-        }
-      ]
-    };
-  },
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "Lovable App" },
+      { name: "description", content: "Lovable Generated Project" },
+      { name: "author", content: "Lovable" },
+      { property: "og:title", content: "Lovable App" },
+      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:site", content: "@Lovable" }
+    ],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap"
+      }
+    ],
+    scripts: []
+  }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -135,13 +112,25 @@ function RootShell({ children }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("html", { lang: "en", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("head", { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(HeadContent, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("script", { dangerouslySetInnerHTML: { __html: `
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1320732783490764');
+fbq('track', 'PageView');
+        ` } }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("noscript", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         "img",
         {
           height: "1",
           width: "1",
           style: { display: "none" },
-          src: `https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`,
+          src: "https://www.facebook.com/tr?id=1320732783490764&ev=PageView&noscript=1",
           alt: ""
         }
       ) })
@@ -162,7 +151,7 @@ function RootComponent() {
   }, [href]);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}) });
 }
-const $$splitComponentImporter$3 = () => import("./offers-DXHUXwif.mjs");
+const $$splitComponentImporter$3 = () => import("./offers-cbc6E3wH.mjs");
 const Route$3 = createFileRoute("/offers")({
   head: () => ({
     meta: [{
@@ -186,7 +175,7 @@ const Route$2 = createFileRoute("/admin")({
   }),
   component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-const $$splitComponentImporter$1 = () => import("./index-w-d2xpPM.mjs");
+const $$splitComponentImporter$1 = () => import("./index-DIirLhsp.mjs");
 const Route$1 = createFileRoute("/")({
   head: () => ({
     meta: [{
@@ -198,7 +187,7 @@ const Route$1 = createFileRoute("/")({
   }),
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-const $$splitComponentImporter = () => import("./product._slug-Cclss2k4.mjs");
+const $$splitComponentImporter = () => import("./product._slug-DktCUlNt.mjs");
 const Route = createFileRoute("/product/$slug")({
   head: ({
     params

@@ -14,9 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 // ─── Meta Pixel ───────────────────────────────────────────────────────────────
-// Set VITE_META_PIXEL_ID in your .env (local) and in Vercel's Environment Variables.
-const envPixelId = import.meta.env.VITE_META_PIXEL_ID;
-const META_PIXEL_ID = envPixelId && envPixelId !== "YOUR_PIXEL_ID_HERE" ? envPixelId : "1320732783490764";
+const META_PIXEL_ID = "1320732783490764";
 
 function NotFoundComponent() {
   return (
@@ -79,55 +77,29 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => {
-    const baseHead = {
-      meta: [
-        { charSet: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
-        { title: "Lovable App" },
-        { name: "description", content: "Lovable Generated Project" },
-        { name: "author", content: "Lovable" },
-        { property: "og:title", content: "Lovable App" },
-        { property: "og:description", content: "Lovable Generated Project" },
-        { property: "og:type", content: "website" },
-        { name: "twitter:card", content: "summary" },
-        { name: "twitter:site", content: "@Lovable" },
-      ],
-      links: [
-        { rel: "stylesheet", href: appCss },
-        { rel: "preconnect", href: "https://fonts.googleapis.com" },
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap",
-        },
-      ],
-    };
-
-    if (!META_PIXEL_ID) {
-      return { ...baseHead, scripts: [] };
-    }
-
-    return {
-      ...baseHead,
-      scripts: [
-        {
-          type: "text/javascript",
-          children: `
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '${META_PIXEL_ID}');
-  fbq('track', 'PageView');
-`,
-        },
-      ],
-    };
-  },
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "Lovable App" },
+      { name: "description", content: "Lovable Generated Project" },
+      { name: "author", content: "Lovable" },
+      { property: "og:title", content: "Lovable App" },
+      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:site", content: "@Lovable" },
+    ],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap",
+      },
+    ],
+    scripts: [],
+  }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -139,17 +111,29 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-        {META_PIXEL_ID && (
-          <noscript>
-            <img
-              height="1"
-              width="1"
-              style={{ display: "none" }}
-              src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
-              alt=""
-            />
-          </noscript>
-        )}
+        {/* Meta Pixel Code */}
+        <script dangerouslySetInnerHTML={{ __html: `
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1320732783490764');
+fbq('track', 'PageView');
+        ` }} />
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src="https://www.facebook.com/tr?id=1320732783490764&ev=PageView&noscript=1"
+            alt=""
+          />
+        </noscript>
+        {/* End Meta Pixel Code */}
       </head>
       <body>
         {children}
@@ -164,7 +148,6 @@ function RootComponent() {
   const href = useRouterState({ select: (s) => s.location.href });
 
   useEffect(() => {
-    if (!META_PIXEL_ID) return;
     if (typeof window !== "undefined" && (window as any).fbq) {
       (window as any).fbq("track", "PageView");
     }
