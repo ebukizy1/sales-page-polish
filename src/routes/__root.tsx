@@ -15,7 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 // ─── Meta Pixel ───────────────────────────────────────────────────────────────
 // Set VITE_META_PIXEL_ID in your .env (local) and in Vercel's Environment Variables.
-const META_PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID ?? "YOUR_PIXEL_ID_HERE";
+const envPixelId = import.meta.env.VITE_META_PIXEL_ID;
+const META_PIXEL_ID = envPixelId && envPixelId !== "YOUR_PIXEL_ID_HERE" ? envPixelId : "1320732783490764";
 
 function NotFoundComponent() {
   return (
@@ -100,7 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
     ],
     scripts:
-      META_PIXEL_ID && META_PIXEL_ID !== "YOUR_PIXEL_ID_HERE"
+      META_PIXEL_ID
         ? [
             {
               children: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`,
@@ -119,7 +120,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-        {META_PIXEL_ID && META_PIXEL_ID !== "YOUR_PIXEL_ID_HERE" && (
+        {META_PIXEL_ID && (
           <noscript>
             <img
               height="1"
@@ -144,12 +145,10 @@ function RootComponent() {
   const href = useRouterState({ select: (s) => s.location.href });
 
   useEffect(() => {
-    if (!META_PIXEL_ID || META_PIXEL_ID === "YOUR_PIXEL_ID_HERE") return;
-    if (typeof window === "undefined") return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fbq = (window as any).fbq as undefined | ((...args: any[]) => void);
-    if (!fbq) return;
-    fbq("track", "PageView");
+    if (!META_PIXEL_ID) return;
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "PageView");
+    }
   }, [href]);
 
   return (

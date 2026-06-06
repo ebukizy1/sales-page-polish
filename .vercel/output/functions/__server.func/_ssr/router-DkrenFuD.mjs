@@ -32,7 +32,8 @@ function reportLovableError(error, context = {}) {
     }
   );
 }
-const META_PIXEL_ID = "1320732783490764";
+const envPixelId = "1320732783490764";
+const META_PIXEL_ID = envPixelId;
 function NotFoundComponent() {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center bg-background px-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-md text-center", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-7xl font-bold text-foreground", children: "404" }),
@@ -138,14 +139,13 @@ function RootComponent() {
   const { queryClient } = Route$4.useRouteContext();
   const href = useRouterState({ select: (s) => s.location.href });
   reactExports.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const fbq = window.fbq;
-    if (!fbq) return;
-    fbq("track", "PageView");
+    if (typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "PageView");
+    }
   }, [href]);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}) });
 }
-const $$splitComponentImporter$3 = () => import("./offers-ByOnzGSL.mjs");
+const $$splitComponentImporter$3 = () => import("./offers-idtu9K7o.mjs");
 const Route$3 = createFileRoute("/offers")({
   head: () => ({
     meta: [{
@@ -169,7 +169,7 @@ const Route$2 = createFileRoute("/admin")({
   }),
   component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-const $$splitComponentImporter$1 = () => import("./index-ByDn4d4i.mjs");
+const $$splitComponentImporter$1 = () => import("./index-crSXbxz3.mjs");
 const Route$1 = createFileRoute("/")({
   head: () => ({
     meta: [{
@@ -181,7 +181,7 @@ const Route$1 = createFileRoute("/")({
   }),
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-const $$splitComponentImporter = () => import("./product._slug-BjzmOgUx.mjs");
+const $$splitComponentImporter = () => import("./product._slug-Bp0N0mQk.mjs");
 const Route = createFileRoute("/product/$slug")({
   head: ({
     params
