@@ -1,9 +1,9 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
-import { b as getProductBySlugData } from "./meta-pixel-DAbaJywW.mjs";
-import { P as ProductSalesFunnel } from "./ProductSalesFunnel-B4dHIzNH.mjs";
-import { R as Route } from "./router-A_5RZ0Fj.mjs";
+import { b as getProductBySlugData } from "./meta-pixel-y6HAsfn-.mjs";
+import { P as ProductSalesFunnel } from "./ProductSalesFunnel-CrRfA6H9.mjs";
+import { R as Route } from "./router-B9yxM5C-.mjs";
 import "../_libs/seroval.mjs";
-import "./server-ai85gIEi.mjs";
+import "./server-COJXPwRD.mjs";
 import "node:async_hooks";
 import "../_libs/h3-v2.mjs";
 import "../_libs/rou3.mjs";
