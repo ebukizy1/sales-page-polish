@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getOffersData } from "@/lib/api/example.functions";
 import { Tag, ArrowRight, Gift } from "lucide-react";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 export const Route = createFileRoute("/offers")({
   head: () => ({
@@ -48,7 +49,7 @@ function OffersPage() {
     <main className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Link to="/" className="text-sm font-bold text-primary">← Back to Home</Link>
+          <Link to="/" onClick={() => trackMetaEvent("ClickLink", { destination: "Home from Offers" })} className="text-sm font-bold text-primary">← Back to Home</Link>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">All Active Offers</p>
         </div>
       </header>
@@ -108,6 +109,7 @@ function OffersPage() {
                       to="/product/$slug"
                       params={{ slug: o.product_slug }}
                       hash="order"
+                      onClick={() => trackMetaEvent("ViewContent", { content_name: o.title, value: o.price, currency: "NGN" })}
                       className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5"
                     >
                       View Offer <ArrowRight className="h-4 w-4" />
@@ -116,6 +118,7 @@ function OffersPage() {
                     <Link
                       to="/"
                       hash="order"
+                      onClick={() => trackMetaEvent("InitiateCheckout", { content_name: o.title, value: o.price, currency: "NGN" })}
                       className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5"
                     >
                       Order This Bundle <ArrowRight className="h-4 w-4" />

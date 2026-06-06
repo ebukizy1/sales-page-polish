@@ -1,4 +1,4 @@
-import { b as createServerFn, T as TSS_SERVER_FUNCTION, g as getServerFnById } from "./server-ns6X4ZMQ.mjs";
+import { b as createServerFn, T as TSS_SERVER_FUNCTION, g as getServerFnById } from "./server-JRjk1gnS.mjs";
 import { o as objectType, s as stringType } from "../_libs/zod.mjs";
 var createSsrRpc = (functionId) => {
   const url = "/_serverFn/" + functionId;
@@ -35,9 +35,22 @@ const getProductBySlugData = createServerFn({
 const getOffersData = createServerFn({
   method: "GET"
 }).handler(createSsrRpc("525bd2cbf959dc36e31c6248bb1917ae23e9f675701ed6ba5e796ebcd0a5029f"));
+function trackMetaEvent(eventName, params) {
+  if (typeof window !== "undefined") {
+    const fbq = window.fbq;
+    if (fbq) {
+      if (params) {
+        fbq("track", eventName, params);
+      } else {
+        fbq("track", eventName);
+      }
+    }
+  }
+}
 export {
   getLandingPageData as a,
   getProductBySlugData as b,
   getOffersData as g,
-  notifyNewOrder as n
+  notifyNewOrder as n,
+  trackMetaEvent as t
 };

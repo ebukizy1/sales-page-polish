@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { db, type Product, type Spec, type Feature, type Package, type SiteSettings, type Review, type FAQ, type GalleryImage } from "@/lib/cms-types";
 import { notifyNewOrder } from "@/lib/api/example.functions";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 import {
   CheckCircle2, Phone, MessageCircle, ShieldCheck, BatteryFull, Sun, Award, Truck, Lock, Star,
   Zap, Droplet, Wrench, Leaf, Flame, Package as PackageIcon, AlertTriangle, Clock, ChevronLeft, ChevronRight,
@@ -67,16 +68,16 @@ function StickyCTA({ phone, whatsapp, ctaText }: { phone: string; whatsapp: stri
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur lg:hidden p-2.5">
       <div className="mx-auto flex max-w-md items-center gap-2">
         {whatsapp && (
-          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">
+          <a href={`https://wa.me/${whatsapp}`} onClick={() => trackMetaEvent("Contact", { method: "WhatsApp Sticky CTA" })} target="_blank" rel="noopener noreferrer" className="flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">
             <MessageCircle className="h-5 w-5" />
           </a>
         )}
         {phone && (
-          <a href={`tel:${phone}`} className="flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">
+          <a href={`tel:${phone}`} onClick={() => trackMetaEvent("Contact", { method: "Phone Sticky CTA" })} className="flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition">
             <Phone className="h-5 w-5" />
           </a>
         )}
-        <a href="#order" className="lit-cta flex h-12 flex-1 items-center justify-center rounded-xl px-4 text-sm font-black tracking-wide text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all duration-150">
+        <a href="#order" onClick={() => trackMetaEvent("InitiateCheckout", { position: "Sticky CTA" })} className="lit-cta flex h-12 flex-1 items-center justify-center rounded-xl px-4 text-sm font-black tracking-wide text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all duration-150">
           {ctaText}
         </a>
       </div>
@@ -293,7 +294,7 @@ export default function ProductSalesFunnel({
               ))}
             </ul>
             <div className="pt-4">
-              <a href="#order" className="lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 active:scale-95 transition-all duration-150 sm:w-auto">
+              <a href="#order" onClick={() => trackMetaEvent("InitiateCheckout", { position: "Hero Section" })} className="lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 active:scale-95 transition-all duration-150 sm:w-auto">
                 {heroCtaText}
               </a>
             </div>
@@ -336,11 +337,11 @@ export default function ProductSalesFunnel({
             </div>
 
             <div className="mt-5 space-y-2">
-              <a href="#order" className="lit-cta flex items-center justify-center rounded-xl py-3 px-4 text-xs font-black text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 active:scale-[0.98] transition shadow-md shadow-emerald-500/10">
+              <a href="#order" onClick={() => trackMetaEvent("InitiateCheckout", { position: "Pricing Card" })} className="lit-cta flex items-center justify-center rounded-xl py-3 px-4 text-xs font-black text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 active:scale-[0.98] transition shadow-md shadow-emerald-500/10">
                 ✅ Order Now — Pay On Delivery
               </a>
               {whatsapp && (
-                <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-xs font-black text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                <a href={`https://wa.me/${whatsapp}`} onClick={() => trackMetaEvent("Contact", { method: "WhatsApp Pricing Card" })} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-xs font-black text-slate-300 hover:bg-slate-800 hover:text-white transition">
                   <MessageCircle className="h-4 w-4 text-emerald-400 fill-emerald-400/10" /> Chat On WhatsApp
                 </a>
               )}
@@ -379,7 +380,7 @@ export default function ProductSalesFunnel({
       </section>
 
       {/* DYNAMIC FEATURES (SECTION 2) */}
-      <section className="py-20 bg-slate-950 relative">
+      <section className="py-20 bg-slate-950 relative overflow-hidden">
         <div className="pointer-events-none absolute left-10 top-1/2 h-[400px] w-[400px] rounded-full bg-emerald-500/5 blur-[120px]" />
 
         <div className="mx-auto max-w-6xl px-4 relative z-10">
@@ -459,7 +460,7 @@ export default function ProductSalesFunnel({
               })()}
             </ul>
             <div className="pt-4">
-              <a href="#order" className="lit-cta inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition">
+              <a href="#order" onClick={() => trackMetaEvent("InitiateCheckout", { position: "Zero Bills Section" })} className="lit-cta inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition">
                 ✅ Yes — I Want Mine →
               </a>
             </div>
@@ -469,7 +470,7 @@ export default function ProductSalesFunnel({
       </section>
 
       {/* REAL SECURITY MEDIA SECTION (SECTION 4) */}
-      <section className="bg-slate-950 py-20 relative">
+      <section className="bg-slate-950 py-20 relative overflow-hidden">
         <div className="pointer-events-none absolute right-10 top-1/4 h-[500px] w-[500px] rounded-full bg-emerald-500/5 blur-[120px]" />
 
         <div className="mx-auto max-w-6xl px-4 relative z-10">
@@ -491,7 +492,7 @@ export default function ProductSalesFunnel({
           </div>
 
           <div className="mt-12 text-center">
-            <a href="#order" className="lit-cta inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition">
+            <a href="#order" onClick={() => trackMetaEvent("InitiateCheckout", { position: "Real Security Section" })} className="lit-cta inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition">
               ✅ Secure Your Compound Now →
             </a>
           </div>
@@ -550,7 +551,7 @@ export default function ProductSalesFunnel({
       />
 
       {/* CUSTOMER TESTIMONIALS (SECTION 6) */}
-      <section className="py-20 bg-slate-950 relative">
+      <section className="py-20 bg-slate-950 relative overflow-hidden">
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-emerald-500/5 blur-[120px]" />
 
         <div className="mx-auto max-w-6xl px-4 relative z-10">
@@ -713,7 +714,7 @@ export default function ProductSalesFunnel({
 
       {/* HELP LINE */}
       {(phone || whatsapp) && (
-        <section className="bg-slate-900/40 border-t border-slate-900 py-16 text-center">
+        <section className="bg-slate-900/40 border-t border-slate-900 py-16 text-center overflow-hidden">
           <div className="mx-auto max-w-3xl px-4 space-y-6">
             <h2 className="text-3xl font-black text-white">Need Help Placing Your Order?</h2>
             {phone && (
@@ -723,12 +724,12 @@ export default function ProductSalesFunnel({
             )}
             <div className="flex flex-col items-center gap-3.5 sm:flex-row sm:justify-center">
               {whatsapp && (
-                <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto">
+                <a href={`https://wa.me/${whatsapp}`} onClick={() => trackMetaEvent("Contact", { method: "WhatsApp Help Line" })} target="_blank" rel="noopener noreferrer" className="lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto">
                   <MessageCircle className="h-5 w-5" /> Chat On WhatsApp
                 </a>
               )}
               {phone && (
-                <a href={`tel:${phone}`} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-8 py-4 font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto">
+                <a href={`tel:${phone}`} onClick={() => trackMetaEvent("Contact", { method: "Phone Help Line" })} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-8 py-4 font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto">
                   <Phone className="h-5 w-5" /> Call {phone}
                 </a>
               )}
@@ -740,7 +741,7 @@ export default function ProductSalesFunnel({
       {/* FOOTER */}
       <footer className="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-3">
         <p>© {new Date().getFullYear()} {settings?.store_name || "Store"} · All Rights Reserved</p>
-        <Link to="/offers" className="text-emerald-400 hover:text-emerald-300 underline tracking-wider font-extrabold uppercase text-xs transition-colors">
+        <Link to="/offers" onClick={() => trackMetaEvent("ViewContent", { content_name: "Offers Footer Link" })} className="text-emerald-400 hover:text-emerald-300 underline tracking-wider font-extrabold uppercase text-xs transition-colors">
           View Offers
         </Link>
       </footer>
@@ -825,7 +826,7 @@ function CtaBar({ kicker, sub, label }: { kicker: string; sub: string; label: st
           <p className="text-sm font-black uppercase tracking-wider text-emerald-400">{kicker}</p>
           <p className="text-sm text-slate-400 font-medium leading-relaxed">{sub}</p>
         </div>
-        <a href="#order" className="lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 text-sm font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/25 active:scale-95 transition sm:w-auto">
+        <a href="#order" onClick={() => trackMetaEvent("InitiateCheckout", { position: `CTA Bar: ${kicker}` })} className="lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 text-sm font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/25 active:scale-95 transition sm:w-auto">
           {label} →
         </a>
       </div>
@@ -839,9 +840,33 @@ function OrderForm({ packages, whatsapp, email, phone }: { packages: Package[]; 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [checkoutInitiated, setCheckoutInitiated] = useState(false);
 
-  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const handleFormFocus = () => {
+    if (!checkoutInitiated) {
+      setCheckoutInitiated(true);
+      trackMetaEvent("InitiateCheckout", {
+        content_category: "Solar Light Form"
+      });
+    }
+  };
+
+  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setForm((f) => ({ ...f, [k]: val }));
+    if (k === "pkg") {
+      const p = packages.find((pkg) => pkg.id === val);
+      if (p) {
+        trackMetaEvent("AddToCart", {
+          content_name: p.title,
+          value: p.price,
+          currency: "NGN",
+          content_ids: [p.package_code ?? p.id],
+          content_type: "product"
+        });
+      }
+    }
+  };
 
   const selectedPkg = useMemo(() => packages.find((p) => p.id === form.pkg) || null, [packages, form.pkg]);
 
@@ -889,11 +914,17 @@ function OrderForm({ packages, whatsapp, email, phone }: { packages: Package[]; 
           await notifyNewOrder({ data: { to: email, subject: `NEW ORDER — ${form.name.trim()}`, text: lines } });
         } catch { }
       }
-      if (typeof window !== "undefined") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const fbq = (window as any).fbq as undefined | ((...args: any[]) => void);
-        if (fbq) fbq("track", "Lead");
-      }
+      trackMetaEvent("Lead", {
+        content_name: selectedPkg.title,
+        value: selectedPkg.price,
+        currency: "NGN"
+      });
+      trackMetaEvent("Purchase", {
+        content_name: selectedPkg.title,
+        value: selectedPkg.price,
+        currency: "NGN",
+        content_type: "product"
+      });
       setSuccess(true);
       setForm({ name: "", phone: "", altPhone: "", address: "", state: "", pkg: "" });
 
@@ -938,12 +969,12 @@ function OrderForm({ packages, whatsapp, email, phone }: { packages: Package[]; 
         {(whatsapp || phone) && (
           <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
             {whatsapp && (
-              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-6 py-3 text-sm font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto">
+              <a href={`https://wa.me/${whatsapp}`} onClick={() => trackMetaEvent("Contact", { method: "WhatsApp Success View" })} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-6 py-3 text-sm font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto">
                 <MessageCircle className="h-5 w-5" /> Chat On WhatsApp
               </a>
             )}
             {phone && (
-              <a href={`tel:${phone}`} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-6 py-3 text-sm font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto">
+              <a href={`tel:${phone}`} onClick={() => trackMetaEvent("Contact", { method: "Phone Success View" })} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-6 py-3 text-sm font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto">
                 <Phone className="h-5 w-5" /> Call {phone}
               </a>
             )}
@@ -961,12 +992,12 @@ function OrderForm({ packages, whatsapp, email, phone }: { packages: Package[]; 
         <p className="text-sm text-slate-400 font-medium">Free shipping. Pay only when the delivery agent brings it to your door.</p>
       </div>
 
-      <input required value={form.name} onChange={update("name")} placeholder="Your Full Name *" className={inputCls} />
-      <input required value={form.phone} onChange={update("phone")} placeholder="Your Active Phone Number *" className={inputCls} />
-      <input value={form.altPhone} onChange={update("altPhone")} placeholder="Alternative Phone Number (Optional)" className={inputCls} />
-      <textarea required value={form.address} onChange={update("address")} placeholder="Full Delivery Address (Street name, area, house number) *" rows={3} className={inputCls} />
+      <input required value={form.name} onChange={update("name")} onFocus={handleFormFocus} placeholder="Your Full Name *" className={inputCls} />
+      <input required value={form.phone} onChange={update("phone")} onFocus={handleFormFocus} placeholder="Your Active Phone Number *" className={inputCls} />
+      <input value={form.altPhone} onChange={update("altPhone")} onFocus={handleFormFocus} placeholder="Alternative Phone Number (Optional)" className={inputCls} />
+      <textarea required value={form.address} onChange={update("address")} onFocus={handleFormFocus} placeholder="Full Delivery Address (Street name, area, house number) *" rows={3} className={inputCls} />
 
-      <select required value={form.state} onChange={update("state")} className={inputCls}>
+      <select required value={form.state} onChange={update("state")} onFocus={handleFormFocus} className={inputCls}>
         <option value="" disabled className="text-slate-700">Select Your Delivery State *</option>
         {STATES.map((s) => <option key={s} value={s} className="bg-slate-950 text-slate-200">{s}</option>)}
       </select>

@@ -1,6 +1,6 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
-import { g as getOffersData } from "./example.functions-D1NqFWnG.mjs";
+import { g as getOffersData, t as trackMetaEvent } from "./meta-pixel-D3Rh0wyA.mjs";
 import "../_libs/seroval.mjs";
 import { G as Gift, T as Tag, A as ArrowRight } from "../_libs/lucide-react.mjs";
 import "../_libs/tanstack__router-core.mjs";
@@ -15,7 +15,7 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "./server-ns6X4ZMQ.mjs";
+import "./server-JRjk1gnS.mjs";
 import "node:async_hooks";
 import "../_libs/h3-v2.mjs";
 import "../_libs/rou3.mjs";
@@ -40,7 +40,9 @@ function OffersPage() {
   }, []);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "min-h-screen bg-background text-foreground", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "border-b border-border bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto flex max-w-6xl items-center justify-between px-4 py-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/", className: "text-sm font-bold text-primary", children: "← Back to Home" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/", onClick: () => trackMetaEvent("ClickLink", {
+        destination: "Home from Offers"
+      }), className: "text-sm font-bold text-primary", children: "← Back to Home" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs font-semibold uppercase tracking-wider text-muted-foreground", children: "All Active Offers" })
     ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mx-auto max-w-6xl px-4 py-12 sm:py-16", children: [
@@ -84,10 +86,18 @@ function OffersPage() {
             ] }),
             o.product_slug ? /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: "/product/$slug", params: {
               slug: o.product_slug
-            }, hash: "order", className: "mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5", children: [
+            }, hash: "order", onClick: () => trackMetaEvent("ViewContent", {
+              content_name: o.title,
+              value: o.price,
+              currency: "NGN"
+            }), className: "mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5", children: [
               "View Offer ",
               /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "h-4 w-4" })
-            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: "/", hash: "order", className: "mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5", children: [
+            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: "/", hash: "order", onClick: () => trackMetaEvent("InitiateCheckout", {
+              content_name: o.title,
+              value: o.price,
+              currency: "NGN"
+            }), className: "mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground transition hover:-translate-y-0.5", children: [
               "Order This Bundle ",
               /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "h-4 w-4" })
             ] })

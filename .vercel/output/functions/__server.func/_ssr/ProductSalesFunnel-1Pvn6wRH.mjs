@@ -1,7 +1,7 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
 import { d as db } from "./cms-types-DUiZVPkm.mjs";
-import { n as notifyNewOrder } from "./example.functions-D1NqFWnG.mjs";
+import { t as trackMetaEvent, n as notifyNewOrder } from "./meta-pixel-D3Rh0wyA.mjs";
 import { Z as Zap, C as Check, F as Flame, M as MessageCircle, S as ShieldCheck, a as Truck, L as Lock, b as Star, c as CircleCheck, d as Leaf, W as Wrench, D as Droplet, B as BatteryFull, e as Award, f as Sun, g as MapPin, P as Package, h as TriangleAlert, i as Phone, j as ChevronLeft, k as ChevronRight, l as Clock, m as ChevronUp, n as ChevronDown } from "../_libs/lucide-react.mjs";
 const STATES = [
   "Abia",
@@ -102,9 +102,9 @@ function CountdownPill({ tone = "dark" }) {
 }
 function StickyCTA({ phone, whatsapp, ctaText }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed inset-x-0 bottom-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur lg:hidden p-2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto flex max-w-md items-center gap-2", children: [
-    whatsapp && /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: `https://wa.me/${whatsapp}`, target: "_blank", rel: "noopener noreferrer", className: "flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "h-5 w-5" }) }),
-    phone && /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: `tel:${phone}`, className: "flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Phone, { className: "h-5 w-5" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", className: "lit-cta flex h-12 flex-1 items-center justify-center rounded-xl px-4 text-sm font-black tracking-wide text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all duration-150", children: ctaText })
+    whatsapp && /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: `https://wa.me/${whatsapp}`, onClick: () => trackMetaEvent("Contact", { method: "WhatsApp Sticky CTA" }), target: "_blank", rel: "noopener noreferrer", className: "flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "h-5 w-5" }) }),
+    phone && /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: `tel:${phone}`, onClick: () => trackMetaEvent("Contact", { method: "Phone Sticky CTA" }), className: "flex h-12 w-12 flex-none items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800 transition", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Phone, { className: "h-5 w-5" }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", onClick: () => trackMetaEvent("InitiateCheckout", { position: "Sticky CTA" }), className: "lit-cta flex h-12 flex-1 items-center justify-center rounded-xl px-4 text-sm font-black tracking-wide text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all duration-150", children: ctaText })
   ] }) });
 }
 function VideoPlayer({ url, poster }) {
@@ -241,7 +241,7 @@ function ProductSalesFunnel({
             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-none rounded-full bg-emerald-500/15 p-1 text-emerald-400 border border-emerald-500/20", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "h-4 w-4", strokeWidth: 3 }) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold", children: item })
           ] }, idx)) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pt-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", className: "lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 active:scale-95 transition-all duration-150 sm:w-auto", children: heroCtaText }) })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pt-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", onClick: () => trackMetaEvent("InitiateCheckout", { position: "Hero Section" }), className: "lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 active:scale-95 transition-all duration-150 sm:w-auto", children: heroCtaText }) })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:block", children: galleryBlock }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-3xl border border-slate-800 bg-slate-950/60 p-6 shadow-2xl backdrop-blur relative", children: [
@@ -272,8 +272,8 @@ function ProductSalesFunnel({
             ] })
           ] }, p.id)) }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-5 space-y-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", className: "lit-cta flex items-center justify-center rounded-xl py-3 px-4 text-xs font-black text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 active:scale-[0.98] transition shadow-md shadow-emerald-500/10", children: "✅ Order Now — Pay On Delivery" }),
-            whatsapp && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `https://wa.me/${whatsapp}`, target: "_blank", rel: "noopener noreferrer", className: "flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-xs font-black text-slate-300 hover:bg-slate-800 hover:text-white transition", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", onClick: () => trackMetaEvent("InitiateCheckout", { position: "Pricing Card" }), className: "lit-cta flex items-center justify-center rounded-xl py-3 px-4 text-xs font-black text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:brightness-110 active:scale-[0.98] transition shadow-md shadow-emerald-500/10", children: "✅ Order Now — Pay On Delivery" }),
+            whatsapp && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `https://wa.me/${whatsapp}`, onClick: () => trackMetaEvent("Contact", { method: "WhatsApp Pricing Card" }), target: "_blank", rel: "noopener noreferrer", className: "flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-xs font-black text-slate-300 hover:bg-slate-800 hover:text-white transition", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "h-4 w-4 text-emerald-400 fill-emerald-400/10" }),
               " Chat On WhatsApp"
             ] })
@@ -309,7 +309,7 @@ function ProductSalesFunnel({
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-3xl font-black text-emerald-400 tracking-tight sm:text-4xl", children: s.v }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 sm:text-xs", children: s.l })
     ] }, s.l)) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "py-20 bg-slate-950 relative", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "py-20 bg-slate-950 relative overflow-hidden", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pointer-events-none absolute left-10 top-1/2 h-[400px] w-[400px] rounded-full bg-emerald-500/5 blur-[120px]" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-6xl px-4 relative z-10", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-2xl text-center space-y-3 mb-12", children: [
@@ -360,10 +360,10 @@ function ProductSalesFunnel({
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-slate-200", children: t })
           ] }, idx));
         })() }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pt-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", className: "lit-cta inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition", children: "✅ Yes — I Want Mine →" }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pt-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", onClick: () => trackMetaEvent("InitiateCheckout", { position: "Zero Bills Section" }), className: "lit-cta inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition", children: "✅ Yes — I Want Mine →" }) })
       ] })
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "bg-slate-950 py-20 relative", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "bg-slate-950 py-20 relative overflow-hidden", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pointer-events-none absolute right-10 top-1/4 h-[500px] w-[500px] rounded-full bg-emerald-500/5 blur-[120px]" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-6xl px-4 relative z-10", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-2xl text-center space-y-3 mb-12", children: [
@@ -371,7 +371,7 @@ function ProductSalesFunnel({
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-slate-400 font-medium", children: product.security_section_description || "See how your compound looks after dark — bright, safe, alive." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "max-w-4xl mx-auto rounded-3xl overflow-hidden border border-slate-800 shadow-2xl relative", children: product.security_media_type === "video" && product.video_url ? /* @__PURE__ */ jsxRuntimeExports.jsx(VideoPlayer, { url: product.video_url, poster: product.night_image_url ?? void 0 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(SlotImage, { src: product.night_image_url, label: "IMAGE 3 — INSTALLED AT NIGHT", dark: true, className: "aspect-[16/9] w-full rounded-3xl object-cover" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-12 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", className: "lit-cta inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition", children: "✅ Secure Your Compound Now →" }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-12 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "#order", onClick: () => trackMetaEvent("InitiateCheckout", { position: "Real Security Section" }), className: "lit-cta inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4.5 text-base font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/20 active:scale-95 transition", children: "✅ Secure Your Compound Now →" }) })
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -411,7 +411,7 @@ function ProductSalesFunnel({
         label: "Proceed to Order Form"
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "py-20 bg-slate-950 relative", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "py-20 bg-slate-950 relative overflow-hidden", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-emerald-500/5 blur-[120px]" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-6xl px-4 relative z-10", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-2xl text-center space-y-3 mb-12", children: [
@@ -523,15 +523,15 @@ function ProductSalesFunnel({
         f.id || idx
       )) })
     ] }) }),
-    (phone || whatsapp) && /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "bg-slate-900/40 border-t border-slate-900 py-16 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-3xl px-4 space-y-6", children: [
+    (phone || whatsapp) && /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "bg-slate-900/40 border-t border-slate-900 py-16 text-center overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-3xl px-4 space-y-6", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-3xl font-black text-white", children: "Need Help Placing Your Order?" }),
       phone && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-3xl font-black tracking-wider text-emerald-400 sm:text-4xl", children: phone }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-3.5 sm:flex-row sm:justify-center", children: [
-        whatsapp && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `https://wa.me/${whatsapp}`, target: "_blank", rel: "noopener noreferrer", className: "lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto", children: [
+        whatsapp && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `https://wa.me/${whatsapp}`, onClick: () => trackMetaEvent("Contact", { method: "WhatsApp Help Line" }), target: "_blank", rel: "noopener noreferrer", className: "lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "h-5 w-5" }),
           " Chat On WhatsApp"
         ] }),
-        phone && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `tel:${phone}`, className: "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-8 py-4 font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto", children: [
+        phone && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `tel:${phone}`, onClick: () => trackMetaEvent("Contact", { method: "Phone Help Line" }), className: "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-8 py-4 font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Phone, { className: "h-5 w-5" }),
           " Call ",
           phone
@@ -546,7 +546,7 @@ function ProductSalesFunnel({
         settings?.store_name || "Store",
         " · All Rights Reserved"
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/offers", className: "text-emerald-400 hover:text-emerald-300 underline tracking-wider font-extrabold uppercase text-xs transition-colors", children: "View Offers" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/offers", onClick: () => trackMetaEvent("ViewContent", { content_name: "Offers Footer Link" }), className: "text-emerald-400 hover:text-emerald-300 underline tracking-wider font-extrabold uppercase text-xs transition-colors", children: "View Offers" })
     ] }),
     (phone || whatsapp) && /* @__PURE__ */ jsxRuntimeExports.jsx(StickyCTA, { phone, whatsapp, ctaText: "✅ Place Order Now — Pay On Delivery" })
   ] });
@@ -605,7 +605,7 @@ function CtaBar({ kicker, sub, label }) {
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-black uppercase tracking-wider text-emerald-400", children: kicker }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-slate-400 font-medium leading-relaxed", children: sub })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: "#order", className: "lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 text-sm font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/25 active:scale-95 transition sm:w-auto", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: "#order", onClick: () => trackMetaEvent("InitiateCheckout", { position: `CTA Bar: ${kicker}` }), className: "lit-cta inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-8 py-4 text-sm font-black text-slate-950 hover:brightness-110 shadow-lg shadow-emerald-500/25 active:scale-95 transition sm:w-auto", children: [
       label,
       " →"
     ] })
@@ -616,7 +616,31 @@ function OrderForm({ packages, whatsapp, email, phone }) {
   const [error, setError] = reactExports.useState("");
   const [submitting, setSubmitting] = reactExports.useState(false);
   const [success, setSuccess] = reactExports.useState(false);
-  const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const [checkoutInitiated, setCheckoutInitiated] = reactExports.useState(false);
+  const handleFormFocus = () => {
+    if (!checkoutInitiated) {
+      setCheckoutInitiated(true);
+      trackMetaEvent("InitiateCheckout", {
+        content_category: "Solar Light Form"
+      });
+    }
+  };
+  const update = (k) => (e) => {
+    const val = e.target.value;
+    setForm((f) => ({ ...f, [k]: val }));
+    if (k === "pkg") {
+      const p = packages.find((pkg) => pkg.id === val);
+      if (p) {
+        trackMetaEvent("AddToCart", {
+          content_name: p.title,
+          value: p.price,
+          currency: "NGN",
+          content_ids: [p.package_code ?? p.id],
+          content_type: "product"
+        });
+      }
+    }
+  };
   const selectedPkg = reactExports.useMemo(() => packages.find((p) => p.id === form.pkg) || null, [packages, form.pkg]);
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -673,10 +697,17 @@ function OrderForm({ packages, whatsapp, email, phone }) {
         } catch {
         }
       }
-      if (typeof window !== "undefined") {
-        const fbq = window.fbq;
-        if (fbq) fbq("track", "Lead");
-      }
+      trackMetaEvent("Lead", {
+        content_name: selectedPkg.title,
+        value: selectedPkg.price,
+        currency: "NGN"
+      });
+      trackMetaEvent("Purchase", {
+        content_name: selectedPkg.title,
+        value: selectedPkg.price,
+        currency: "NGN",
+        content_type: "product"
+      });
       setSuccess(true);
       setForm({ name: "", phone: "", altPhone: "", address: "", state: "", pkg: "" });
       const whatsappMsg = [
@@ -710,11 +741,11 @@ function OrderForm({ packages, whatsapp, email, phone }) {
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "mt-5 text-2xl font-black text-white sm:text-3xl", children: "✅ Order Placed Successfully!" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 text-slate-400 max-w-md mx-auto", children: "We've received your order and our representative will call you within 24 hours to confirm your delivery address. Thank you!" }),
       (whatsapp || phone) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center", children: [
-        whatsapp && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `https://wa.me/${whatsapp}`, target: "_blank", rel: "noopener noreferrer", className: "inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-6 py-3 text-sm font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto", children: [
+        whatsapp && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `https://wa.me/${whatsapp}`, onClick: () => trackMetaEvent("Contact", { method: "WhatsApp Success View" }), target: "_blank", rel: "noopener noreferrer", className: "inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-6 py-3 text-sm font-black text-slate-950 hover:brightness-110 shadow-lg sm:w-auto", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "h-5 w-5" }),
           " Chat On WhatsApp"
         ] }),
-        phone && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `tel:${phone}`, className: "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-6 py-3 text-sm font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto", children: [
+        phone && /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: `tel:${phone}`, onClick: () => trackMetaEvent("Contact", { method: "Phone Success View" }), className: "inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-6 py-3 text-sm font-black text-slate-300 hover:bg-slate-850 hover:text-white transition sm:w-auto", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Phone, { className: "h-5 w-5" }),
           " Call ",
           phone
@@ -728,11 +759,11 @@ function OrderForm({ packages, whatsapp, email, phone }) {
       /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-black text-white sm:text-3xl", children: "Place Your Order Below 👇" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-slate-400 font-medium", children: "Free shipping. Pay only when the delivery agent brings it to your door." })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("input", { required: true, value: form.name, onChange: update("name"), placeholder: "Your Full Name *", className: inputCls }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("input", { required: true, value: form.phone, onChange: update("phone"), placeholder: "Your Active Phone Number *", className: inputCls }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("input", { value: form.altPhone, onChange: update("altPhone"), placeholder: "Alternative Phone Number (Optional)", className: inputCls }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("textarea", { required: true, value: form.address, onChange: update("address"), placeholder: "Full Delivery Address (Street name, area, house number) *", rows: 3, className: inputCls }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("select", { required: true, value: form.state, onChange: update("state"), className: inputCls, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("input", { required: true, value: form.name, onChange: update("name"), onFocus: handleFormFocus, placeholder: "Your Full Name *", className: inputCls }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("input", { required: true, value: form.phone, onChange: update("phone"), onFocus: handleFormFocus, placeholder: "Your Active Phone Number *", className: inputCls }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("input", { value: form.altPhone, onChange: update("altPhone"), onFocus: handleFormFocus, placeholder: "Alternative Phone Number (Optional)", className: inputCls }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("textarea", { required: true, value: form.address, onChange: update("address"), onFocus: handleFormFocus, placeholder: "Full Delivery Address (Street name, area, house number) *", rows: 3, className: inputCls }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("select", { required: true, value: form.state, onChange: update("state"), onFocus: handleFormFocus, className: inputCls, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "", disabled: true, className: "text-slate-700", children: "Select Your Delivery State *" }),
       STATES.map((s) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: s, className: "bg-slate-950 text-slate-200", children: s }, s))
     ] }),
